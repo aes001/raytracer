@@ -5,8 +5,6 @@ Requires cmake
 
 ```
 mkdir build
-```
-
-```
 cmake -B build -S .
+make
 ```
