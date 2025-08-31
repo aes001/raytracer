@@ -3,7 +3,7 @@
 ## Building
 Requires cmake
 
-```
+```bash
 mkdir build
 cmake -B build -S .
 make
