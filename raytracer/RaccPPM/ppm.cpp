@@ -63,7 +63,7 @@ PPMImage::PPMImage(const std::string& filename, int width, int height, const Pix
 // =============================================================================
 //		PPMImage : Save
 // -----------------------------------------------------------------------------
-bool PPMImage::Save()
+bool PPMImage::Save() const
 {
 	return SaveFile(mFilename + ".ppm");
 }
@@ -75,7 +75,7 @@ bool PPMImage::Save()
 // =============================================================================
 //		PPMImage : Save As
 // -----------------------------------------------------------------------------
-bool PPMImage::SaveAs(const std::string& filename, const std::string& fileExtension, bool overwrite)
+bool PPMImage::SaveAs(const std::string& filename, const std::string& fileExtension, bool overwrite) const
 {
 	namespace fs = std::filesystem;
 
@@ -162,7 +162,7 @@ RGBValue& PPMImage::PixelAt(int x, int y) &
 // =============================================================================
 //		PPMImage : Save File
 // -----------------------------------------------------------------------------
-bool PPMImage::SaveFile(const std::string& filename)
+bool PPMImage::SaveFile(const std::string& filename) const
 {
 	bool isSaved = false;
 
@@ -193,9 +193,28 @@ bool PPMImage::SaveFile(const std::string& filename)
 // =============================================================================
 //		PPMMaker : New PPM Image
 // -----------------------------------------------------------------------------
+//		Create a ppm image from width and height
+// -----------------------------------------------------------------------------
 PPMImage PPMMaker::NewPPMImage(const std::string& filename, int width, int height)
 {
 	return PPMImage(filename, width, height);
+}
+
+
+
+
+
+// =============================================================================
+//		PPMMaker : New PPM Image
+// -----------------------------------------------------------------------------
+//		Create a ppm image from width and aspectRatio
+// -----------------------------------------------------------------------------
+PPMImage PPMMaker::NewPPMImage(const std::string& filename, int width, double aspectRatio)
+{
+	int imageHeight = width/aspectRatio;
+	imageHeight = (imageHeight < 1) ? 1 : imageHeight;
+
+	return PPMImage(filename, width, imageHeight);
 }
 
 

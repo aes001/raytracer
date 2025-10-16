@@ -18,7 +18,14 @@
 
 
 
+// To DO: Refactor to inherit from RaccImage
 
+
+
+
+// ===========================================================================
+//		Includes
+// ---------------------------------------------------------------------------
 #include <string>
 #include <vector>
 #include <optional>
@@ -40,9 +47,9 @@ namespace RACCPPM
 		uint8_t G;
 		uint8_t B;
 
-		std::string Red() { return std::to_string(R); }
-		std::string Green() { return std::to_string(G); }
-		std::string Blue() { return std::to_string(B); }
+		std::string Red()   const { return std::to_string(R); }
+		std::string Green() const { return std::to_string(G); }
+		std::string Blue()  const { return std::to_string(B); }
 	};
 
 
@@ -55,10 +62,10 @@ namespace RACCPPM
 		friend class PPMMaker;
 		using PixelsArray = std::vector<RGBValue>;
 
-		bool								Save(); // Beware! Will overwrite the file!
+		bool								Save() const; // Beware! Will overwrite the file!
 		bool								SaveAs(const std::string& filename,
 												   const std::string& fileExtension = ".ppm",
-												   bool overwrite = false);
+												   bool overwrite = false) const;
 
 		int									GetWidth() const { return mWidth; }
 		void								SetWidth(int width);
@@ -84,13 +91,16 @@ namespace RACCPPM
 
 
 	protected:
-		explicit							PPMImage(const std::string& filename, int width, int height);
+		explicit							PPMImage(const std::string& filename,
+													 int                width,
+													 int                height);
+
 		explicit							PPMImage(const std::string& filename,
 													 int                width,
 													 int                height,
 													 const PixelsArray& pixels);
 
-		bool								SaveFile(const std::string& filename);
+		bool								SaveFile(const std::string& filename) const;
 
 
 	private:
@@ -108,7 +118,14 @@ namespace RACCPPM
 	class PPMMaker
 	{
 	public:
-		static PPMImage						NewPPMImage(const std::string& filename, int width, int height);
+		static PPMImage						NewPPMImage(const std::string& filename,
+														int                width,
+														int                height);
+
+		static PPMImage						NewPPMImage(const std::string& filename,
+														int				   width,
+														double			   aspectRatio);
+
 
 		static std::optional<PPMImage>		OpenPPMImage(const std::string& filename);
 	};

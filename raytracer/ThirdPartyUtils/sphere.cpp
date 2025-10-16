@@ -44,7 +44,7 @@ sphere::sphere(const point3& center, double radius)
 // =============================================================================
 //		sphere : hit
 // -----------------------------------------------------------------------------
-bool sphere::hit(const ray& r, double ray_tmin, double ray_tmax, hit_record& rec) const
+bool sphere::hit(const ray& r, interval ray_t, hit_record& rec) const
 {
 	vec3 oc = center - r.origin();
 	double a = r.direction().length_squared();
@@ -62,12 +62,12 @@ bool sphere::hit(const ray& r, double ray_tmin, double ray_tmax, hit_record& rec
 		double rootTwo = (h + sqrtd) / a;
 		double acceptedRoot;
 
-		if (rootOne <= ray_tmax && rootOne >= ray_tmin)
+		if (ray_t.surrounds(rootOne))
 		{
 			acceptedRoot = rootOne;
 			hit = true;
 		}
-		else if (rootTwo <= ray_tmax && rootTwo >= ray_tmin)
+		else if (ray_t.surrounds(rootTwo))
 		{
 			acceptedRoot = rootTwo;
 			hit = true;
@@ -77,7 +77,8 @@ bool sphere::hit(const ray& r, double ray_tmin, double ray_tmax, hit_record& rec
 		{
 			rec.t = acceptedRoot;
 			rec.p = r.at(rec.t);
-			rec.normal = (rec.p - center) / radius;
+			vec3 outwardNormal = (rec.p - center) / radius;
+			rec.set_face_normal(r, outwardNormal);
 		}
 	}
 
