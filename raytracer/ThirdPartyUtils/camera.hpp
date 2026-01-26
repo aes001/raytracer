@@ -61,33 +61,32 @@ namespace RTIW
 	class camera
 	{
 	public:
-		bool								Render(const hittable& world, RACCPPM::PPMImage& imageBuffer);
+		bool Render(const hittable& world, RACCPPM::PPMImage& imageBuffer);
 
 
-		int									GetWidth() const;
-		int									GetHeight() const;
+		int GetWidth() const;
+		int GetHeight() const;
 
-		void								SetWidth(int width);
-		void								SetAspectRatio(double aspectRatio);
+		void SetWidth(int width);
+		void SetAspectRatio(double aspectRatio);
 
 
 
 	private:
-		void								Initialize();
+		void Initialize();
 
-		color								RayColor(const ray& r,
-													  const hittable& world) const;
+		color RayColor(const ray& r, const hittable& world) const;
 
 
-		double								mAspectRatio = 1;
-		int									mImageWidth = 100;
+		double mAspectRatio = 1;
+		int mImageWidth = 100;
 
 		// These should not be user setttable
-		int									mImageHeight;
-		point3								mCameraCenter;
-		vec3								mPixelZeroLocation;
-		vec3								mPixelDeltaX;
-		vec3								mPixelDeltaY;
+		int mImageHeight;
+		point3 mCameraCenter;
+		vec3 mPixelZeroLocation;
+		vec3 mPixelDeltaX;
+		vec3 mPixelDeltaY;
 	};
 
 
