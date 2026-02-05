@@ -62,15 +62,29 @@ bool camera::Render(const hittable& world, RACCPPM::PPMImage& imageBuffer)
 
 			for (int i = 0; i < mImageWidth; i++)
 			{
-				vec3 pixelCenter = mPixelZeroLocation +
-								   (i * mPixelDeltaX) +
-								   (j * mPixelDeltaY);
-				vec3 rayDirection = pixelCenter - mCameraCenter;
-				ray r(mCameraCenter, rayDirection);
+				color pixelColor;
+				for (int sample = 0; sample < mSamplesPerPixel; sample++)
+				{
+					ray r = GetRay(i, j);
+					pixelColor += RayColor(r, world);
+				}
+				static const interval intensity(0.000, 0.999);
 
-				color rayColor = RayColor(r, world);
-				imageBuffer.PixelAt(i, j) =
-					RaccPPMToRTIWBridge::ColorToRaccRBG(rayColor);
+				// Average out all the sampled values
+				pixelColor = pixelColor * mPixelSampleScale;
+
+				// Make sure our result is within 0 to 1
+				pixelColor[0] = intensity.clamp(pixelColor[0]);
+				pixelColor[1] = intensity.clamp(pixelColor[1]);
+				pixelColor[2] = intensity.clamp(pixelColor[2]);
+
+				auto rgbVal = RaccPPMToRTIWBridge::ColorToRaccRBG(pixelColor);
+
+				// std::cout << "R " << rgbVal.Red() << "\n";
+				// std::cout << "G " << rgbVal.Green() << "\n";
+				// std::cout << "B " << rgbVal.Blue() << "\n";
+
+				imageBuffer.PixelAt(i, j) = rgbVal;
 			}
 		}
 
@@ -109,6 +123,15 @@ int camera::GetHeight() const
 
 
 
+int camera::GetSampleCount() const
+{
+	return mSamplesPerPixel;
+}
+
+
+
+
+
 void camera::SetWidth(int width)
 {
 	mImageWidth = width;
@@ -125,6 +148,14 @@ void camera::SetAspectRatio(double aspectRatio)
 
 
 
+void camera::SetSampleCount(int sampleCount)
+{
+	mSamplesPerPixel = sampleCount;
+}
+
+
+
+
 // ===========================================================================
 //		camera : Initialize
 // ---------------------------------------------------------------------------
@@ -133,6 +164,8 @@ void camera::Initialize()
 	// Set up output image size in pixels
 	mImageHeight = mImageWidth / mAspectRatio;
 	mImageHeight = (mImageHeight < 1) ? 1 : mImageHeight;
+
+	mPixelSampleScale = 1.0 / mSamplesPerPixel;
 
 	const double focalLength = 1.0;
 	const double viewportHeight = 2.0;
@@ -190,6 +223,36 @@ color camera::RayColor(const ray& r, const hittable& world) const
 	}
 
 	return colorRet;
+}
+
+
+
+
+
+ray camera::GetRay(int i, int j) const
+{
+	// Construct a camera ray originating from the origin and directed at randomly sampled
+	// point around the pixel location i, j.
+
+	auto offset = SampleSquare();
+	auto pixelSample = mPixelZeroLocation
+					  + ((i + offset.x()) * mPixelDeltaX)
+					  + ((j + offset.y()) * mPixelDeltaY);
+
+	auto rayOrigin = mCameraCenter;
+	auto rayDirection = pixelSample - rayOrigin;
+
+	return ray(rayOrigin, rayDirection);
+}
+
+
+
+
+
+vec3 camera::SampleSquare() const
+{
+	// Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
+	return vec3(random_double() - 0.5, random_double() - 0.5, 0);
 }
 
 

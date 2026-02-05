@@ -39,9 +39,9 @@ public:
 	static inline RACCPPM::RGBValue ColorToRaccRBG(const RTIW::color& color)
 	{
 		return RACCPPM::RGBValue{
-			static_cast<uint8_t>(color.x() * 255.999),
-			static_cast<uint8_t>(color.y() * 255.999),
-			static_cast<uint8_t>(color.z() * 255.999)};
+			static_cast<uint8_t>(color.x() * 256),
+			static_cast<uint8_t>(color.y() * 256),
+			static_cast<uint8_t>(color.z() * 256)};
 	}
 };
 

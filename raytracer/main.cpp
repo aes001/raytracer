@@ -18,19 +18,21 @@ int main()
 	world.add(std::make_shared<RTIW::sphere>(RTIW::point3(0,-100.5,-1), 100));
 
 	const double aspectRatio = 16.0 / 9.0;
-	const int imageWidth = 1920;
+	const int imageWidth = 1280;
+	const int sampleCount = 100;
 
 	RTIW::camera cam;
 	cam.SetAspectRatio(aspectRatio);
 	cam.SetWidth(imageWidth);
+	cam.SetSampleCount(sampleCount);
 
-	auto image = RACCPPM::PPMMaker::NewPPMImage("OutPutImage.ppm",
+	auto image = RACCPPM::PPMMaker::NewPPMImage("OutputImage",
 												imageWidth,
 												aspectRatio);
 
 	cam.Render(world, image);
 
-	image.SaveAs("OutputImage.ppm");
+	image.SaveAs("OutputImage");
 
 	return 0;
 }

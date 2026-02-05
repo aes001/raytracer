@@ -66,9 +66,11 @@ namespace RTIW
 
 		int GetWidth() const;
 		int GetHeight() const;
+		int GetSampleCount() const;
 
 		void SetWidth(int width);
 		void SetAspectRatio(double aspectRatio);
+		void SetSampleCount(int sampleCount);
 
 
 
@@ -77,9 +79,13 @@ namespace RTIW
 
 		color RayColor(const ray& r, const hittable& world) const;
 
+		ray GetRay(int i, int j) const;
+
+		vec3 SampleSquare() const;
 
 		double mAspectRatio = 1;
 		int mImageWidth = 100;
+		int mSamplesPerPixel = 10;
 
 		// These should not be user setttable
 		int mImageHeight;
@@ -87,6 +93,7 @@ namespace RTIW
 		vec3 mPixelZeroLocation;
 		vec3 mPixelDeltaX;
 		vec3 mPixelDeltaY;
+		double mPixelSampleScale;
 	};
 
 
