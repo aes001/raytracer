@@ -80,11 +80,11 @@ namespace RTIW
 	class hittable
 	{
 	public:
-		virtual							~hittable() = default;
+		virtual ~hittable() = default;
 
-		virtual bool					hit(const ray& r,
-											interval ray_t,
-											hit_record& rec) const = 0;
+		virtual bool hit(const ray& r,
+						 interval ray_t,
+						 hit_record& rec) const = 0;
 	};
 
 

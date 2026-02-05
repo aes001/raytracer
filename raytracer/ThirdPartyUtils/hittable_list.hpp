@@ -49,16 +49,16 @@ namespace RTIW
 	class hittable_list : public hittable
 	{
 	public:
-											hittable_list() {}
-											hittable_list(std::shared_ptr<hittable> object);
+		hittable_list() {}
+		hittable_list(std::shared_ptr<hittable> object);
 
-		void								clear() { objects.clear(); }
+		void clear() { objects.clear(); }
 
-		void								add(std::shared_ptr<hittable> object);
+		void add(std::shared_ptr<hittable> object);
 
-		bool								hit(const ray&  r,
-												interval ray_t,
-												hit_record& rec) const override;
+		bool hit(const ray&  r,
+				 interval ray_t,
+				 hit_record& rec) const override;
 
 		std::vector<std::shared_ptr<hittable>> objects;
 	};
