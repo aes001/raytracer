@@ -231,8 +231,8 @@ color camera::RayColor(const ray& r, const hittable& world) const
 
 ray camera::GetRay(int i, int j) const
 {
-	// Construct a camera ray originating from the origin and directed at randomly sampled
-	// point around the pixel location i, j.
+	// Construct a camera ray originating from the origin and directed at
+	// randomly sampled point around the pixel location i, j.
 
 	auto offset = SampleSquare();
 	auto pixelSample = mPixelZeroLocation

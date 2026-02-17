@@ -3,7 +3,7 @@
  *
  *	DESCRIPTION:
  *		Implementation of an interval class. This file is to be included only
- *		in rtweekend.hpp. I don't know how I feel about that.
+ *		in rtweekend.hpp.
  *		Taken from Ray Tracing in One Weekend.
  *
  *	CONTRIBUTORS:

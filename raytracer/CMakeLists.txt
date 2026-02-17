@@ -48,11 +48,19 @@ set (THIRD_PARTY_UTILS_SRC
 	"ThirdPartyUtils/vec3.hpp"
 )
 
+set (MY_OWN_STUFF_SRC
+	"model.cpp"
+	"model.hpp"
+	"triangle.cpp"
+	"triangle.hpp"
+)
+
 target_sources(${PROJECT_NAME}
 	PRIVATE
 		main.cpp
 		main.hpp
 		${THIRD_PARTY_UTILS_SRC}
+		${MY_OWN_STUFF_SRC}
 )
 
 target_include_directories(${PROJECT_NAME}

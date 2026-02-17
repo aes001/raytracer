@@ -45,13 +45,9 @@ namespace RTIW
 	class sphere : public hittable
 	{
 	public:
-											sphere(const point3& center,
-												   double radius);
+		sphere(const point3& center, double radius);
 
-
-		bool								hit(const ray& r,
-												interval ray_t,
-												hit_record& rec) const override;
+		bool hit(const ray& r, interval ray_t, hit_record& rec) const override;
 
 
 	private:

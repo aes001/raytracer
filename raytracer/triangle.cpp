@@ -1,0 +1,184 @@
+/*	NAME:
+ *		triangle.cpp
+ *
+ *	DESCRIPTION:
+ *		Implementation of triangle primitive
+ *		Implements Moeller - Trumbore ray/triangle intersection algorithm
+ *
+ *	CONTRIBUTORS:
+ *		 Racc 05-FEB-26
+*/
+
+
+
+
+
+// ===========================================================================
+//		Includes
+// ---------------------------------------------------------------------------
+#include "triangle.hpp"
+
+
+
+
+
+using namespace RTIW;
+
+
+
+
+
+Triangle::Triangle(vec3 v0, vec3 v1, vec3 v2)
+	: mV0(v0)
+	, mV1(v1)
+	, mV2(v2)
+{
+}
+
+
+
+
+
+bool Triangle::hit(const ray& r, interval ray_t, hit_record& rec) const
+{
+	const vec3 e1 = mV1 - mV0;
+	const vec3 e2 = mV2 - mV0;
+
+	const vec3 p = cross(r.direction(), e2);
+
+	const double determinant = dot(e1, p);
+
+
+	// Use the determinant to check if the triangle is facing away from the
+	// camera
+	const bool backfacing = determinant < 0.0;
+
+	if (backfacing)
+	{
+		return false;
+	}
+
+
+	// Calculate u
+	const vec3 tvec = r.origin() - mV0;
+
+	const double u = dot(tvec, p);
+	const bool uInvalid = u < 0.0 || u > determinant;
+
+	if (uInvalid)
+	{
+		return false;
+	}
+
+
+	// Calculate v
+	const vec3 q = cross(tvec, e1);
+
+	const double v = dot(r.direction(), q);
+	const bool vInvalid = v < 0.0 || u + v > determinant;
+
+	if (vInvalid)
+	{
+		return false;
+	}
+
+
+	// Calculate t
+	const double invDeterminant = 1.0 / determinant;
+
+	double t = dot(r.direction(), q) * invDeterminant;
+	const bool tInvalid = !(ray_t.surrounds(t));
+
+	if (tInvalid)
+	{
+		return false;
+	}
+
+
+
+	// Confirmed hit
+	rec.t = t;
+	rec.p = r.at(t);
+	vec3 faceNormal = cross(e1, e2);
+	rec.set_face_normal(r, faceNormal / faceNormal.length());
+
+	return true;
+}
+
+
+
+
+
+vec3& Triangle::v0()
+{
+	return mV0;
+}
+
+
+
+
+
+vec3& Triangle::v1()
+{
+	return mV1;
+}
+
+
+
+
+
+vec3& Triangle::v2()
+{
+	return mV2;
+}
+
+
+
+
+
+vec3 Triangle::Normal() const
+{
+	return cross(mV1 - mV0, mV2 - mV0);
+}
+
+
+
+
+
+vec3& Triangle::operator[](const size_t i)
+{
+	return GetVertex(i);
+}
+
+
+
+
+
+vec3& Triangle::operator[](const int i)
+{
+	return GetVertex((size_t) i);
+}
+
+
+
+
+
+vec3& Triangle::GetVertex(const size_t i)
+{
+	switch(i)
+	{
+		case 0:
+			return mV0;
+		case 1:
+			return mV1;
+		case 2:
+			return mV2;
+		default:
+			throw std::out_of_range("Invalid triangle vertex");
+	}
+}
+
+
+
+
+
