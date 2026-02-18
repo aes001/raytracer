@@ -55,6 +55,20 @@ set (MY_OWN_STUFF_SRC
 	"triangle.hpp"
 )
 
+
+
+
+
+
+set (LIBS_UHSP
+	"${RACC_LIBS_DIR}/glfw-3.4/include"
+)
+
+
+
+
+
+
 target_sources(${PROJECT_NAME}
 	PRIVATE
 		main.cpp
@@ -68,14 +82,20 @@ target_include_directories(${PROJECT_NAME}
 		RaccPPM
 		ThirdPartyUtils
 		RaccDebug
+		${LIBS_UHSP}
 )
 
 
 
 
+find_package(OpenGL REQUIRED)
+
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
 		RaccPPM
+		OpenGL::GL
+		glad
+		glfw
 )
 
 

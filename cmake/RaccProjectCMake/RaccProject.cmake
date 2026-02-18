@@ -17,3 +17,4 @@ function(RACC_DEFINE_LIBRARY_TARGET projectName)
 	_RACC_TARGET_ENABLE_ASAN(${projectName} ${RACC_LIB_${projectName}_ENABLE_ASAN})
 	_RACC_TARGET_ENABLE_UBSAN(${projectName} ${RACC_LIB_${projectName}_ENABLE_UBSAN})
 endfunction()
+

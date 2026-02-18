@@ -21,6 +21,9 @@
 #    1. Libraries List
 #----------------------------------------------------------
 add_subdirectory(./rapidobj)
+add_subdirectory(./RmlUi-6.2)
+add_subdirectory(./glad)
+add_subdirectory(./glfw-3.4)
 
 
 
