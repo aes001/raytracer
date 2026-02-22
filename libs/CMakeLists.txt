@@ -21,6 +21,7 @@
 #    1. Libraries List
 #----------------------------------------------------------
 add_subdirectory(./rapidobj)
+add_subdirectory(./stb-image)
 
 
 

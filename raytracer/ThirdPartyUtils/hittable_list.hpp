@@ -60,6 +60,8 @@ namespace RTIW
 				 interval ray_t,
 				 hit_record& rec) const override;
 
+		BoundingBox GetBoundingBox() const override;
+
 		std::vector<std::shared_ptr<hittable>> objects;
 	};
 

@@ -22,6 +22,7 @@
 // ===========================================================================
 //		Includes
 // ---------------------------------------------------------------------------
+#include "triangle.hpp"
 #include "vec3.hpp"
 #include "hittable.hpp"
 
@@ -58,10 +59,14 @@ namespace RTIW
 	public:
 		Model(const std::string& modelPath);
 
+		virtual bool hit(const ray& r,
+						 interval ray_t,
+						 hit_record& rec) const override;
 
+		BoundingBox GetBoundingBox() const override;
 
 	private:
-		std::vector<std::shared_ptr<hittable>> mObjects;
+		std::vector<TriangleSimp> mTriangles;
 	};
 
 

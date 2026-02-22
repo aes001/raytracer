@@ -89,3 +89,20 @@ bool sphere::hit(const ray& r, interval ray_t, hit_record& rec) const
 
 
 
+BoundingBox sphere::GetBoundingBox() const
+{
+	vec3 min{center.x() - radius,
+			 center.y() - radius,
+			 center.z() - radius};
+
+	vec3 max{center.x() + radius,
+			 center.y() + radius,
+			 center.z() + radius};
+
+	return BoundingBox{min, max};
+}
+
+
+
+
+

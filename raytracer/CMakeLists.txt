@@ -10,6 +10,9 @@
 #	Contents
 #-----------------------------------------------------------
 #	1. Setup
+#	2. Sources
+#	3. Libraries
+#	4. Link
 #-----------------------------------------------------------
 
 
@@ -49,12 +52,39 @@ set (THIRD_PARTY_UTILS_SRC
 )
 
 set (MY_OWN_STUFF_SRC
+	"convenientNumerics.hpp"
 	"model.cpp"
 	"model.hpp"
 	"triangle.cpp"
 	"triangle.hpp"
 )
 
+
+
+
+
+#===========================================================
+#	3. Libraries
+#-----------------------------------------------------------
+include(FetchContent)
+
+FetchContent_Declare(
+	fmt
+	GIT_REPOSITORY https://github.com/fmtlib/fmt
+	GIT_TAG        407c905e45ad75fc29bf0f9bb7c5c2fd3475976f)
+FetchContent_MakeAvailable(fmt)
+
+set (LIBS_UHSP
+	"${RACC_LIBS_DIR}/rapidobj/include"
+)
+
+
+
+
+
+#===========================================================
+#	4. Link
+#-----------------------------------------------------------
 target_sources(${PROJECT_NAME}
 	PRIVATE
 		main.cpp
@@ -68,14 +98,15 @@ target_include_directories(${PROJECT_NAME}
 		RaccPPM
 		ThirdPartyUtils
 		RaccDebug
+		${LIBS_UHSP}
 )
-
-
-
 
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
 		RaccPPM
+		rapidobj
+		fmt::fmt
+		stb-image
 )
 
 

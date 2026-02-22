@@ -49,6 +49,8 @@ namespace RTIW
 
 		bool hit(const ray& r, interval ray_t, hit_record& rec) const override;
 
+		BoundingBox GetBoundingBox() const override;
+
 
 	private:
 		point3 center;

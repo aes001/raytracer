@@ -81,3 +81,12 @@ bool hittable_list::hit(const ray& r, interval ray_t, hit_record& rec) const
 
 
 
+BoundingBox hittable_list::GetBoundingBox() const
+{
+	return BoundingBox();
+}
+
+
+
+
+
