@@ -25,6 +25,9 @@
 // ============================================================================
 //		Includes
 // ----------------------------------------------------------------------------
+#include "RTIWUtils/RTIWConstants.hpp"
+
+// Standard Library
 #include <cmath>
 #include <iostream>
 
@@ -77,6 +80,16 @@ namespace RTIW
 
 		double length_squared() const {
 			return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
+		}
+
+		static vec3 random() {
+			return vec3(random_double(), random_double(), random_double());
+		}
+
+		static vec3 random(double min, double max) {
+			return vec3(random_double(min, max),
+						random_double(min, max),
+						random_double(min, max));
 		}
 	};
 
@@ -147,6 +160,29 @@ namespace RTIW
 	}
 
 
+	// Divergence from RTIW tutorial. We are doing this instead of the
+	// rejection sampling method
+	inline vec3 random_unit_vector() {
+		double theta = random_double(0., 2. * pi);
+		double z = random_double(-1., 1.);
+
+		double rSqr = 1.0 - (z * z);
+		double r = std::sqrt(rSqr < 0 ? 0 : rSqr);
+
+		return vec3(r * cos(theta), r * sin(theta), z);
+	}
+
+
+	inline vec3 random_on_hemisphere(const vec3& normal) {
+		vec3 on_unit_sphere = random_unit_vector();
+
+		if (dot(on_unit_sphere, normal) > 0.0) {
+			return on_unit_sphere;
+		}
+		else {
+			return -on_unit_sphere;
+		}
+	}
 
 
 
