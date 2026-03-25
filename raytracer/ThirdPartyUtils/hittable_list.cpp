@@ -34,10 +34,10 @@ using namespace RTIW;
 // ===========================================================================
 //		hittable_list : constructor with object
 // ---------------------------------------------------------------------------
-hittable_list::hittable_list(std::shared_ptr<hittable> object)
-{
-	add(object);
-}
+//Scene::Scene(std::shared_ptr<SceneObject> object)
+//{
+//	add(object);
+//}
 
 
 
@@ -46,9 +46,10 @@ hittable_list::hittable_list(std::shared_ptr<hittable> object)
 // ===========================================================================
 //		hittable_list : add
 // ---------------------------------------------------------------------------
-void hittable_list::add(std::shared_ptr<hittable> object)
+std::size_t Scene::add(std::shared_ptr<SceneObject> object)
 {
 	objects.push_back(object);
+	return objects.size() - 1;
 }
 
 
@@ -58,7 +59,7 @@ void hittable_list::add(std::shared_ptr<hittable> object)
 // ===========================================================================
 //		hittable_list : hit
 // ---------------------------------------------------------------------------
-bool hittable_list::hit(const ray& r, interval ray_t, hit_record& rec) const
+bool Scene::hit(const ray& r, interval ray_t, hit_record& rec) const
 {
 	hit_record temp_rec;
 	bool hit_anything = false;
@@ -81,10 +82,10 @@ bool hittable_list::hit(const ray& r, interval ray_t, hit_record& rec) const
 
 
 
-BoundingBox hittable_list::GetBoundingBox() const
-{
-	return BoundingBox();
-}
+//BoundingBox Scene::GetBoundingBox() const
+//{
+//	return BoundingBox();
+//}
 
 
 

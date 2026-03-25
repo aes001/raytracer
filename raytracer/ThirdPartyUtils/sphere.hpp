@@ -42,7 +42,7 @@ namespace RTIW
 	// =======================================================================
 	//		Sphere
 	// -----------------------------------------------------------------------
-	class sphere : public hittable
+	class sphere : public Primitive
 	{
 	public:
 		sphere(const point3& center, double radius);
@@ -57,6 +57,7 @@ namespace RTIW
 		double radius;
 
 	};
+
 
 
 

@@ -56,6 +56,16 @@ inline double degrees_to_radians(double degrees) {
 
 
 
+inline
+double operator""_deg(long double degrees)
+{
+	return degrees_to_radians(static_cast<double>(degrees));
+}
+
+
+
+
+
 inline double random_double() {
     static std::uniform_real_distribution<double> distribution(0.0, 1.0);
     static std::mt19937 generator;

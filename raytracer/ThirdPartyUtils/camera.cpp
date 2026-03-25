@@ -37,7 +37,7 @@ using namespace RTIW;
 // ===========================================================================
 //		camera : Render
 // ---------------------------------------------------------------------------
-bool camera::Render(const hittable& world, RACCPPM::PPMImage& imageBuffer)
+bool camera::Render(const Scene& world, RACCPPM::PPMImage& imageBuffer)
 {
 	Initialize();
 
@@ -52,6 +52,8 @@ bool camera::Render(const hittable& world, RACCPPM::PPMImage& imageBuffer)
 
 	if(imageBufferValid)
 	{
+		// Flatten triangle array
+
 		// Render
 		for (int j = 0; j < mImageHeight; j++)
 		{
@@ -206,14 +208,19 @@ void camera::Initialize()
 // ===========================================================================
 //		camera : Ray Color
 // ---------------------------------------------------------------------------
-color camera::RayColor(const ray& r, const hittable& world) const
+color camera::RayColor(const ray& r, const Scene& world) const
 {
 	color colorRet;
 
 	hit_record rec;
 	if (world.hit(r, interval(0, infinity), rec))
 	{
+#if !RENDER_SURFACE_NORMAL
+		vec3 direction = random_on_hemisphere(rec.normal);
+		colorRet = 0.5 * RayColor(ray(rec.p, direction), world);
+#else
 		colorRet = 0.5 * (rec.normal + color(1, 1, 1));
+#endif // RENDER_SURFACE_NORMAL
 	}
 	else
 	{

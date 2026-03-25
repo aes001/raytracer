@@ -32,6 +32,10 @@
 #include "color.hpp"
 #include "ray.hpp"
 #include "vec3.hpp"
+#include "vec4.hpp"
+#include "vec.hpp"
+#include "matrices.hpp"
+#include "mat44.hpp"
 #include "interval.hpp"
 
 

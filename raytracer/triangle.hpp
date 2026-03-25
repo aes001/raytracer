@@ -22,9 +22,9 @@
 // ===========================================================================
 //		Includes
 // ---------------------------------------------------------------------------
-#include "vec3.hpp"
 #include "hittable.hpp"
-
+#include "mat44.hpp"
+#include "vec3.hpp"
 
 
 
@@ -40,7 +40,7 @@ namespace RACCPPM
 
 namespace RTIW
 {
-	class hittable;
+	class Primitive;
 	class ray;
 }
 
@@ -59,6 +59,7 @@ namespace RTIW
 	//		Triangle Simplified : A simplified triangle class
 	//------------------------------------------------------------------------
 	//		An immutable triangle class that also avoids virtual dispatch
+	//		This class should no longer be used
 	//------------------------------------------------------------------------
 	class TriangleSimp
 	{
@@ -81,12 +82,16 @@ namespace RTIW
 
 
 
-	class Triangle : public hittable
+	class Triangle : public Primitive
 	{
 	public:
 		Triangle(vec3 v0, vec3 v1, vec3 v2);
 
-		bool hit(const ray& r, interval ray_t, hit_record& rec) const override;
+		bool hit(const ray& r,
+				 interval ray_t,
+				 hit_record& rec) const override;
+
+		BoundingBox GetBoundingBox() const override;
 
 		vec3& v0();
 		vec3& v1();
@@ -96,7 +101,8 @@ namespace RTIW
 
 		vec3& operator[](const size_t i);
 
-		BoundingBox GetBoundingBox() const override;
+		void Transform(const Mat44d& transform);
+
 
 	private:
 		vec3& GetVertex(const size_t i);

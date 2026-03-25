@@ -2,11 +2,7 @@
  *		RaccImage.hpp
  *
  *	DESCRIPTION:
- *		Racc Image Abstract Class
- *		Also this is the first file where we are getting rid of the silly 10
- *		tabs rule for function names. Newer files should follow suit. We
- *		might also switch to spaces instead of tabs. This comment should be
- *		a git commit message instead.
+ *		Raw pixel buffer class that supports exporting to image files
  *
  *	CONTRIBUTORS:
  *		RACC 10-OCT-25
@@ -28,13 +24,39 @@
 // ---------------------------------------------------------------------------
 #include <string>
 #include <vector>
+#include <array>
 
 
 
 
 
-namespace RACCPPM
+namespace RaccPixels
 {
+
+
+
+
+
+	enum ImageType
+	{
+		kPNG,
+		kBMP,
+		kTGA,
+		kJPG,
+		kHDR
+	};
+
+
+
+
+
+	enum Channels
+	{
+		kY = 1, // Grayscale image
+		kYA,    // Grayscale image with alpha
+		kRGB,
+		kRGBA
+	};
 
 
 
@@ -56,60 +78,63 @@ namespace RACCPPM
 
 
 
-	class RaccImage
+
+	template <Channels channels>
+	struct PixelValue
+	{
+		double mPixels[channels];
+		static constexpr int kChannelsCount = channels;
+	};
+
+
+
+
+
+	template <Channels channels>
+	class PixelsBuffer
 	{
 	public:
-		using PixelsArray = std::vector<RGBValue>;
+		PixelsBuffer(int width, int height);
 
-		RaccImage(const std::string& fileName,
-				  int                width,
-				  int                height);
-
-		RaccImage(const std::string& fileName,
-				  int                width,
-				  int                height,
-				  const PixelsArray& pixelsArray);
+		~PixelsBuffer();
 
 
+		PixelsBuffer(const PixelsBuffer&);
+		PixelsBuffer& operator=(const PixelsBuffer&);
 
-		// Might overwrite a file with the same name
-		virtual bool Save() const;
-		virtual bool SaveAs(const std::string& filename,
-							const std::string& fileExtension,
-							bool overwrite = false) const;
+
+		PixelsBuffer(PixelsBuffer &&) noexcept;
+		PixelsBuffer& operator=(PixelsBuffer &&) noexcept;
+
+
+		bool Save(const std::string& filename,
+				  ImageType          imageType,
+				  bool               overwrite = false) const;
 
 
 		int GetWidth() const { return mWidth; }
-		void SetWidth(int width);
-
 		int GetHeight() const { return mHeight; }
-		void SetHeight(int height);
 
-		const std::string& GetFileName() const& { return mFilename; }
-		std::string GetFileName() && { return std::move(mFilename); }
 
-		virtual RGBValue GetPixel(int x, int y) const;
-		virtual void SetPixel(int x, int y, const RGBValue& value);
+		const PixelValue<channels>& GetPixel(int x, int y) const;
+
+		void SetPixel(int x, int y, PixelValue<channels> value);
 
 		// Direct access to set pixels
-		virtual RGBValue& PixelAt(int x, int y) &;
-		RGBValue PixelAt(int x, int y) && = delete;
+		PixelValue<channels>& PixelAt(int x, int y);
 
 		// Direct access to the pixels array to set them in bulk
-		virtual const PixelsArray& Pixels() & { return mPixelValues; }
-		// Prevent stupidity
-		virtual PixelsArray Pixels() && { return std::move(mPixelValues); }
+		PixelValue<channels>* Pixels() { return mPixelValues; }
 
 
+	private:
+		bool SaveFile(const std::string& filename) const;
 
-	protected:
-		virtual bool SaveFile(const std::string& filename) const = 0;
-
-
-		std::string mFilename;
+		// These should not be immutable
+		// We are setting them as non const to maintain copy-ablity
 		int mWidth;
 		int mHeight;
-		PixelsArray mPixelValues;
+
 	};
 
 

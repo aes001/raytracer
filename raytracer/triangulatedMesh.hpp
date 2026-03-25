@@ -22,9 +22,10 @@
 // ===========================================================================
 //		Includes
 // ---------------------------------------------------------------------------
-#include "triangle.hpp"
-#include "vec3.hpp"
 #include "hittable.hpp"
+#include "hittable_list.hpp"
+#include "mat44.hpp"
+#include "triangle.hpp"
 
 
 
@@ -54,19 +55,21 @@ namespace RTIW
 
 
 
-	class Model : public hittable
+
+	class TriangulatedMesh : public SceneObject
 	{
 	public:
-		Model(const std::string& modelPath);
+		TriangulatedMesh(const std::string& modelPath);
 
-		virtual bool hit(const ray& r,
+		bool hit(const ray& r,
 						 interval ray_t,
 						 hit_record& rec) const override;
 
-		BoundingBox GetBoundingBox() const override;
+		void GatherPrimitives(
+				std::vector<const Primitive*>& out) const override;
 
-	private:
-		std::vector<TriangleSimp> mTriangles;
+		void Transform(const Mat44d& transform);
+
 	};
 
 
@@ -81,3 +84,8 @@ namespace RTIW
 
 
 #endif // MODEL_HPP
+
+
+
+
+

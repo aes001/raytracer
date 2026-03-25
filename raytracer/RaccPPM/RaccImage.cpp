@@ -22,19 +22,7 @@
 
 
 
-using namespace RACCPPM;
-
-
-
-
-
-// =============================================================================
-//		RaccImage : Save
-// -----------------------------------------------------------------------------
-bool RaccImage::Save() const
-{
-	return SaveFile(mFilename);
-}
+using namespace RaccPixels;
 
 
 
@@ -43,7 +31,7 @@ bool RaccImage::Save() const
 // =============================================================================
 //		RaccImage : Save As
 // -----------------------------------------------------------------------------
-bool RaccImage::SaveAs(const std::string& filename, const std::string& fileExtension, bool overwrite) const
+bool PixelsBuffer::Save(const std::string& filename, ImageType imageType, bool overwrite /*= false*/) const
 {
 	namespace fs = std::filesystem;
 
@@ -67,7 +55,7 @@ bool RaccImage::SaveAs(const std::string& filename, const std::string& fileExten
 // =============================================================================
 //		RaccImage : Set Width
 // -----------------------------------------------------------------------------
-void RaccImage::SetWidth(int width)
+void PixelsBuffer::SetWidth(int width)
 {
 	// To do: Add bounds checking / handle narrowing?
 	mWidth = width;
@@ -80,7 +68,7 @@ void RaccImage::SetWidth(int width)
 // =============================================================================
 //		RaccImage : Set Height
 // -----------------------------------------------------------------------------
-void RaccImage::SetHeight(int height)
+void PixelsBuffer::SetHeight(int height)
 {
 	// To do: Add bounds checking / handle narrowing?
 	mHeight = height;
@@ -94,7 +82,7 @@ void RaccImage::SetHeight(int height)
 // =============================================================================
 //		RaccImage : Get Pixel
 // -----------------------------------------------------------------------------
-RGBValue RaccImage::GetPixel(int x, int y) const
+RGBValue PixelsBuffer::GetPixel(int x, int y) const
 {
 	// To do: Add bounds checking
 	return mPixelValues[(y * mWidth) + x];
@@ -107,7 +95,7 @@ RGBValue RaccImage::GetPixel(int x, int y) const
 // =============================================================================
 //		RaccImage : Set Pixel
 // -----------------------------------------------------------------------------
-void RaccImage::SetPixel(int x, int y, const RGBValue& value)
+void PixelsBuffer::SetPixel(int x, int y, const RGBValue& value)
 {
 	// To do: Add bounds checking
 	mPixelValues[(y * mWidth) + x] = value;
@@ -120,7 +108,7 @@ void RaccImage::SetPixel(int x, int y, const RGBValue& value)
 // =============================================================================
 //		RaccImage : Pixel At
 // -----------------------------------------------------------------------------
-RGBValue& RaccImage::PixelAt(int x, int y) &
+RGBValue& PixelsBuffer::PixelAt(int x, int y) &
 {
 	return mPixelValues[(y * mWidth) + x];
 }

@@ -25,6 +25,7 @@
 // ===========================================================================
 //		Includes
 // ---------------------------------------------------------------------------
+#include "hittable_list.hpp"
 #include "vec3.hpp"
 #include "color.hpp"
 
@@ -43,7 +44,7 @@ namespace RACCPPM
 
 namespace RTIW
 {
-	class hittable;
+	class Primitive;
 	class ray;
 }
 
@@ -61,7 +62,7 @@ namespace RTIW
 	class camera
 	{
 	public:
-		bool Render(const hittable& world, RACCPPM::PPMImage& imageBuffer);
+		bool Render(const RTIW::Scene& world, RACCPPM::PPMImage& imageBuffer);
 
 
 		int GetWidth() const;
@@ -77,7 +78,7 @@ namespace RTIW
 	private:
 		void Initialize();
 
-		color RayColor(const ray& r, const hittable& world) const;
+		color RayColor(const ray& r, const Scene& world) const;
 
 		ray GetRay(int i, int j) const;
 

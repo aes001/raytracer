@@ -49,12 +49,16 @@ set (THIRD_PARTY_UTILS_SRC
 	"ThirdPartyUtils/sphere.cpp"
 	"ThirdPartyUtils/sphere.hpp"
 	"ThirdPartyUtils/vec3.hpp"
+	"ThirdPartyUtils/vec4.hpp"
+	"ThirdPartyUtils/vec.hpp"
 )
 
 set (MY_OWN_STUFF_SRC
 	"convenientNumerics.hpp"
-	"model.cpp"
-	"model.hpp"
+	"MatAndVec/matrices.hpp"
+	"MatAndVec/mat44.hpp"
+	"triangulatedMesh.cpp"
+	"triangulatedMesh.hpp"
 	"triangle.cpp"
 	"triangle.hpp"
 )
@@ -95,9 +99,10 @@ target_sources(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME}
 	PRIVATE
+		MatAndVec
+		RaccDebug
 		RaccPPM
 		ThirdPartyUtils
-		RaccDebug
 		${LIBS_UHSP}
 )
 

@@ -85,12 +85,12 @@ namespace RTIW
 
 
 	// =======================================================================
-	//		hittable : Abstract class for a hittable object
+	//		Primitive : Abstract class for a hittable object
 	// -----------------------------------------------------------------------
-	class hittable
+	class Primitive
 	{
 	public:
-		virtual ~hittable() = default;
+		virtual ~Primitive() = default;
 
 		virtual bool hit(const ray& r,
 						 interval ray_t,

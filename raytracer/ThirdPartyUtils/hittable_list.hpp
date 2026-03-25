@@ -43,26 +43,43 @@ namespace RTIW
 
 
 
-	// =======================================================================
-	//		hittable list
-	// -----------------------------------------------------------------------
-	class hittable_list : public hittable
+	class SceneObject
 	{
 	public:
-		hittable_list() {}
-		hittable_list(std::shared_ptr<hittable> object);
+		virtual bool hit(const ray&  r,
+						 interval ray_t,
+						 hit_record& rec) const = 0;
+
+		virtual void GatherPrimitives(
+				std::vector<const Primitive*>& out) const = 0;
+
+	protected:
+		std::vector<std::shared_ptr<Primitive>> mPrimitives;
+	};
+
+
+
+
+	// =======================================================================
+	//		Scene : Pass this into the camera to render
+	// -----------------------------------------------------------------------
+	class Scene
+	{
+	public:
+		Scene() {}
 
 		void clear() { objects.clear(); }
 
-		void add(std::shared_ptr<hittable> object);
+		std::size_t add(std::shared_ptr<SceneObject> object);
 
 		bool hit(const ray&  r,
 				 interval ray_t,
-				 hit_record& rec) const override;
+				 hit_record& rec) const;
 
-		BoundingBox GetBoundingBox() const override;
+		std::shared_ptr<SceneObject> Get(std::size_t index) { return objects[index]; }
 
-		std::vector<std::shared_ptr<hittable>> objects;
+	private:
+		std::vector<std::shared_ptr<SceneObject>> objects;
 	};
 
 

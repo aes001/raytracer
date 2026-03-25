@@ -89,7 +89,7 @@ bool Triangle::hit(const ray& r, interval ray_t, hit_record& rec) const
 	// Calculate t
 	const double invDeterminant = 1.0 / determinant;
 
-	double t = dot(r.direction(), q) * invDeterminant;
+	double t = dot(e2, q) * invDeterminant;
 	const bool tInvalid = !(ray_t.surrounds(t));
 
 	if (tInvalid)
@@ -187,6 +187,17 @@ BoundingBox Triangle::GetBoundingBox() const
 				std::max({mV0.z(), mV1.z(), mV2.z()})};
 
 	return BoundingBox{min, max};
+}
+
+
+
+
+
+void Triangle::Transform(const Mat44d& transform)
+{
+	mV0 = TransformPoint(transform, mV0);
+	mV1 = TransformPoint(transform, mV1);
+	mV2 = TransformPoint(transform, mV2);
 }
 
 
@@ -295,6 +306,7 @@ BoundingBox TriangleSimp::GetBoundingBox() const
 
 	return BoundingBox{min, max};
 }
+
 
 
 

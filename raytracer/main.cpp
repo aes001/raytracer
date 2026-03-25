@@ -1,3 +1,4 @@
+#include "mat44.hpp"
 #include "ppm.hpp"
 #include "RTIWConglomerate.hpp"
 #include "hittable.hpp"
@@ -5,34 +6,44 @@
 #include "sphere.hpp"
 #include "camera.hpp"
 #include "triangle.hpp"
-#include "model.hpp"
+#include "triangulatedMesh.hpp"
 #include "stb_image.h"
 #include "stb_image_write.h"
+#include <memory>
 
 
 
 
 
-int main()
+int main(int argc, char *argv[])
 {
     // World
-	RTIW::hittable_list world;
+	RTIW::Scene world;
 
-	world.add(std::make_shared<RTIW::Model>("../../data/suzanne_transformed.obj"));
+	if (argc > 2)
+	{
+		std::cerr << "Invalid argument count";
+		return -1;
+	}
 
-	// world.add(std::make_shared<RTIW::sphere>(RTIW::point3(0, 0, -1), 0.5));
-	// world.add(std::make_shared<RTIW::sphere>(RTIW::point3(0,-100.5,-1), 100));
-	// world.add(std::make_shared<RTIW::Triangle>(RTIW::vec3(0, 0.5, -1),
-	// 										   RTIW::vec3(-0.5, -0.5, -1),
-	// 										   RTIW::vec3(0.5, -0.5, -1.5)));
 
-	// world.add(std::make_shared<RTIW::Triangle>(RTIW::vec3(0, 0.5, -1),
-	// 										   RTIW::vec3(-0.05, -0.5, -1.5),
-	// 										   RTIW::vec3(0.05, -0.5, -0.5)));
+	if (argc == 2)
+	{
+		auto object = std::make_shared<RTIW::TriangulatedMesh>(argv[1]);
+		world.add(object);
+	}
+	else
+	{
+		std::size_t monkeyIdx = world.add(std::make_shared<RTIW::TriangulatedMesh>("../../data/suzanne.obj"));
+		auto monkeyPtr = std::static_pointer_cast<RTIW::TriangulatedMesh>(world.Get(monkeyIdx));
 
+		RTIW::Mat44d monkeyTransform;
+		monkeyTransform += RTIW::MakeTranslation( { 0, 0, -2. } );
+		monkeyPtr->Transform(monkeyTransform);
+	}
 
 	const double aspectRatio = 16.0 / 9.0;
-	const int imageWidth = 1280;
+	const int imageWidth = 640;
 	const int sampleCount = 10;
 
 	RTIW::camera cam;
@@ -46,9 +57,7 @@ int main()
 
 	cam.Render(world, image);
 
-	stbi_write_png("OutputPNG", imageWidth, imageWidth / aspectRatio, 3, image.Pixels().data(), 3 * imageWidth);
-
-	image.SaveAs("OutputImage"); 
+	stbi_write_png("OutputPNG.png", imageWidth, imageWidth / aspectRatio, 3, image.Pixels().data(), 3 * imageWidth);
 
 	return 0;
 }
