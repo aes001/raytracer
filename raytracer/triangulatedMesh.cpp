@@ -98,7 +98,10 @@ bool TriangulatedMesh::hit(const ray& r, interval ray_t, hit_record& rec) const
 
 void TriangulatedMesh::GatherPrimitives(std::vector<const Primitive*>& out) const
 {
-
+	for (const auto& prim : mPrimitives)
+	{
+		out.push_back(prim.get());
+	}
 }
 
 
