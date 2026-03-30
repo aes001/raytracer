@@ -23,6 +23,7 @@
 //		Includes
 // ---------------------------------------------------------------------------
 #include "hittable.hpp"
+#include "bvh.hpp"
 #include "mat44.hpp"
 #include "vec3.hpp"
 
@@ -70,7 +71,7 @@ namespace RTIW
 
 		vec3 Normal() const;
 
-		BoundingBox GetBoundingBox() const;
+		AABB GetBoundingBox() const;
 
 	public:
 		const vec3 mV0;
@@ -91,7 +92,7 @@ namespace RTIW
 				 interval ray_t,
 				 hit_record& rec) const override;
 
-		BoundingBox GetBoundingBox() const override;
+		AABB GetBoundingBox() const override;
 
 		vec3& v0();
 		vec3& v1();

@@ -18,6 +18,7 @@
 //		Includes
 // -----------------------------------------------------------------------------
 #include "sphere.hpp"
+#include "bvh.hpp"
 
 
 
@@ -89,7 +90,7 @@ bool sphere::hit(const ray& r, interval ray_t, hit_record& rec) const
 
 
 
-BoundingBox sphere::GetBoundingBox() const
+AABB sphere::GetBoundingBox() const
 {
 	vec3 min{center.x() - radius,
 			 center.y() - radius,
@@ -99,7 +100,7 @@ BoundingBox sphere::GetBoundingBox() const
 			 center.y() + radius,
 			 center.z() + radius};
 
-	return BoundingBox{min, max};
+	return AABB{min, max};
 }
 
 

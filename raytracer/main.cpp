@@ -15,6 +15,12 @@
 
 
 
+#define BINARY_BVH 1
+
+
+
+
+
 int main(int argc, char *argv[])
 {
     // World
@@ -38,7 +44,8 @@ int main(int argc, char *argv[])
 		auto monkeyPtr = std::static_pointer_cast<RTIW::TriangulatedMesh>(world.Get(monkeyIdx));
 
 		RTIW::Mat44d monkeyTransform;
-		monkeyTransform += RTIW::MakeTranslation( { 0, 0, -2. } );
+		monkeyTransform += RTIW::MakeTranslation( { 0, 0, -3. } );
+		monkeyTransform += RTIW::MakeRotationY( 45.0_deg);
 		monkeyPtr->Transform(monkeyTransform);
 	}
 

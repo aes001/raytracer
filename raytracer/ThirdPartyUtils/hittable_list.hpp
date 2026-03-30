@@ -68,7 +68,7 @@ namespace RTIW
 	public:
 		Scene() {}
 
-		void clear() { objects.clear(); }
+		void clear() { mObjects.clear(); }
 
 		std::size_t add(std::shared_ptr<SceneObject> object);
 
@@ -76,10 +76,12 @@ namespace RTIW
 				 interval ray_t,
 				 hit_record& rec) const;
 
-		std::shared_ptr<SceneObject> Get(std::size_t index) { return objects[index]; }
+		std::shared_ptr<SceneObject> Get(std::size_t index) { return mObjects[index]; }
+
+		void GatherAllWorldPrimitives(std::vector<const Primitive*>& out) const;
 
 	private:
-		std::vector<std::shared_ptr<SceneObject>> objects;
+		std::vector<std::shared_ptr<SceneObject>> mObjects;
 	};
 
 

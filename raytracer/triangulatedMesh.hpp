@@ -62,11 +62,12 @@ namespace RTIW
 		TriangulatedMesh(const std::string& modelPath);
 
 		bool hit(const ray& r,
-						 interval ray_t,
-						 hit_record& rec) const override;
+		         interval ray_t,
+		         hit_record& rec) const override;
+
 
 		void GatherPrimitives(
-				std::vector<const Primitive*>& out) const override;
+			std::vector<const Primitive*>& out) const override;
 
 		void Transform(const Mat44d& transform);
 

@@ -25,6 +25,7 @@
 // ===========================================================================
 //		Includes
 // ---------------------------------------------------------------------------
+#include "bvh.hpp"
 #include "hittable_list.hpp"
 #include "vec3.hpp"
 #include "color.hpp"
@@ -79,6 +80,9 @@ namespace RTIW
 		void Initialize();
 
 		color RayColor(const ray& r, const Scene& world) const;
+		color RayColor_BinaryBVH(BVHBinaryNode* bvh,
+		                         const ray& r,
+		                         const Scene& world) const;
 
 		ray GetRay(int i, int j) const;
 

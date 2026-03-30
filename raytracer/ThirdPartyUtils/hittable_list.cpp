@@ -18,6 +18,8 @@
 // ===========================================================================
 //		Includes
 // ---------------------------------------------------------------------------
+#include <iostream>
+#include "bvh.hpp"
 #include "hittable_list.hpp"
 #include "interval.hpp"
 
@@ -48,8 +50,8 @@ using namespace RTIW;
 // ---------------------------------------------------------------------------
 std::size_t Scene::add(std::shared_ptr<SceneObject> object)
 {
-	objects.push_back(object);
-	return objects.size() - 1;
+	mObjects.push_back(object);
+	return mObjects.size() - 1;
 }
 
 
@@ -65,7 +67,7 @@ bool Scene::hit(const ray& r, interval ray_t, hit_record& rec) const
 	bool hit_anything = false;
 	double closest_so_far = ray_t.max;
 
-	for (const auto& object : objects)
+	for (const auto& object : mObjects)
 	{
 		if (object->hit(r, interval(ray_t.min, closest_so_far), temp_rec))
 		{
@@ -82,10 +84,13 @@ bool Scene::hit(const ray& r, interval ray_t, hit_record& rec) const
 
 
 
-//BoundingBox Scene::GetBoundingBox() const
-//{
-//	return BoundingBox();
-//}
+void Scene::GatherAllWorldPrimitives(std::vector<const Primitive*>& out) const
+{
+	for (const auto& object : mObjects)
+	{
+		object->GatherPrimitives(out);
+	}
+}
 
 
 

@@ -12,7 +12,8 @@
 #	1. Setup
 #	2. Sources
 #	3. Libraries
-#	4. Link
+#	4. Combine
+#	5. Link
 #-----------------------------------------------------------
 
 
@@ -23,7 +24,16 @@
 #	1. Setup
 #-----------------------------------------------------------
 project(RayTracer)
+
+# Naive
 RACC_DEFINE_EXECUTABLE_TARGET(${PROJECT_NAME})
+
+# With Binary BVH
+set (RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH "RayTracer-TD_MS_BVH2")
+RACC_DEFINE_EXECUTABLE_TARGET(${RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH})
+
+
+# Also make our libraries available
 add_subdirectory(RaccPPM)
 add_subdirectory(RaccDebug)
 
@@ -35,6 +45,8 @@ add_subdirectory(RaccDebug)
 #-----------------------------------------------------------
 set (THIRD_PARTY_UTILS_SRC
 	"ThirdPartyUtils/RTIWUtils/RTIWConstants.hpp"
+	"ThirdPartyUtils/bvh.hpp"
+	"ThirdPartyUtils/bvh.cpp"
 	"ThirdPartyUtils/camera.cpp"
 	"ThirdPartyUtils/camera.hpp"
 	"ThirdPartyUtils/color.hpp"
@@ -87,35 +99,79 @@ set (LIBS_UHSP
 
 
 #===========================================================
-#	4. Link
+#	4. Combine
 #-----------------------------------------------------------
+set (RT_BASIC_SRC
+	main.cpp
+	main.hpp
+	${THIRD_PARTY_UTILS_SRC}
+	${MY_OWN_STUFF_SRC}
+)
+
+
+set (RT_BASIC_INCLUDE_DIRS
+	MatAndVec
+	RaccDebug
+	RaccPPM
+	ThirdPartyUtils
+	${LIBS_UHSP}
+)
+
+
+set (RT_BASIC_LIBS
+	RaccPPM
+	rapidobj
+	fmt::fmt
+	stb-image
+)
+
+
+
+
+
+
+#===========================================================
+#	5. Link
+#-----------------------------------------------------------
+
+# RAY TRACER: NAIVE
 target_sources(${PROJECT_NAME}
 	PRIVATE
-		main.cpp
-		main.hpp
-		${THIRD_PARTY_UTILS_SRC}
-		${MY_OWN_STUFF_SRC}
+		${RT_BASIC_SRC}
 )
 
 target_include_directories(${PROJECT_NAME}
 	PRIVATE
-		MatAndVec
-		RaccDebug
-		RaccPPM
-		ThirdPartyUtils
-		${LIBS_UHSP}
+		${RT_BASIC_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
-		RaccPPM
-		rapidobj
-		fmt::fmt
-		stb-image
+		${RT_BASIC_LIBS}
 )
 
 
 
+# RAY TRACER: BINARY TOP DOWN MEDIAN SPLIT BVH
+target_compile_definitions(${RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH}
+	PRIVATE
+		BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH=1
+)
+
+target_sources(${RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH}
+	PRIVATE
+		${RT_BASIC_SRC}
+)
+
+target_include_directories(${RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH}
+	PRIVATE
+		${RT_BASIC_INCLUDE_DIRS}
+)
+
+target_link_libraries(${RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH}
+	PUBLIC
+		${RT_BASIC_LIBS}
+)
 
 
 

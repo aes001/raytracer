@@ -26,9 +26,9 @@
 // ===========================================================================
 //		Includes
 // ---------------------------------------------------------------------------
+#include "interval.hpp"
 #include "ray.hpp"
 #include "vec3.hpp"
-#include "interval.hpp"
 
 
 
@@ -45,17 +45,7 @@ namespace RTIW
 {
 
 
-
-
-
-	struct BoundingBox
-	{
-		vec3 min;
-		vec3 max;
-	};
-
-
-
+	struct AABB;
 
 
 	// =======================================================================
@@ -96,7 +86,7 @@ namespace RTIW
 						 interval ray_t,
 						 hit_record& rec) const = 0;
 
-		virtual BoundingBox GetBoundingBox() const = 0;
+		virtual AABB GetBoundingBox() const = 0;
 	};
 
 

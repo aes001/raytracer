@@ -176,7 +176,7 @@ vec3& Triangle::GetVertex(const size_t i)
 
 
 
-BoundingBox Triangle::GetBoundingBox() const
+AABB Triangle::GetBoundingBox() const
 {
 	vec3 min = {std::min({mV0.x(), mV1.x(), mV2.x()}),
 				std::min({mV0.y(), mV1.y(), mV2.y()}),
@@ -186,7 +186,7 @@ BoundingBox Triangle::GetBoundingBox() const
 				std::max({mV0.y(), mV1.y(), mV2.y()}),
 				std::max({mV0.z(), mV1.z(), mV2.z()})};
 
-	return BoundingBox{min, max};
+	return AABB{min, max};
 }
 
 
@@ -294,7 +294,7 @@ vec3 TriangleSimp::Normal() const
 
 
 
-BoundingBox TriangleSimp::GetBoundingBox() const
+AABB TriangleSimp::GetBoundingBox() const
 {
 	vec3 min = {std::min({mV0.x(), mV1.x(), mV2.x()}),
 				std::min({mV0.y(), mV1.y(), mV2.y()}),
@@ -304,7 +304,7 @@ BoundingBox TriangleSimp::GetBoundingBox() const
 				std::max({mV0.y(), mV1.y(), mV2.y()}),
 				std::max({mV0.z(), mV1.z(), mV2.z()})};
 
-	return BoundingBox{min, max};
+	return AABB{min, max};
 }
 
 

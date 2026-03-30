@@ -52,7 +52,12 @@ bool camera::Render(const Scene& world, RACCPPM::PPMImage& imageBuffer)
 
 	if(imageBufferValid)
 	{
-		// Flatten triangle array
+		// Build BVH
+#if BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH
+		std::vector<const Primitive*> allPrimitives;
+		world.GatherAllWorldPrimitives(allPrimitives);
+		std::unique_ptr<BVHBinaryNode> bvhTree = BuildBinaryBVH_MedianSplit(allPrimitives, 0, allPrimitives.size());
+#endif // BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH
 
 		// Render
 		for (int j = 0; j < mImageHeight; j++)
@@ -68,7 +73,11 @@ bool camera::Render(const Scene& world, RACCPPM::PPMImage& imageBuffer)
 				for (int sample = 0; sample < mSamplesPerPixel; sample++)
 				{
 					ray r = GetRay(i, j);
+#if BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH
+					pixelColor += RayColor_BinaryBVH(bvhTree.get(), r, world);
+#else // NAIVE
 					pixelColor += RayColor(r, world);
+#endif // BVH_TYPE
 				}
 				static const interval intensity(0.000, 0.999);
 
@@ -191,9 +200,9 @@ void camera::Initialize()
 
 	// Calculate the location of the top left corner of the viewport
 	const vec3 viewportUpperLeftCorner = mCameraCenter -
-										 vec3(0, 0, focalLength) -
-										 (viewportXVector / 2) -
-										 (viewportYVector / 2);
+	                                     vec3(0, 0, focalLength) -
+	                                     (viewportXVector / 2) -
+	                                     (viewportYVector / 2);
 
 
 	// Calulate the location of the 0th pixel
@@ -236,15 +245,46 @@ color camera::RayColor(const ray& r, const Scene& world) const
 
 
 
+color camera::RayColor_BinaryBVH(BVHBinaryNode* bvh,
+                                 const ray& r,
+                                 const Scene& world) const
+{
+	color colorRet;
+
+	hit_record rec;
+	if (HitBVH_BinaryTree(bvh, r, interval(0, infinity), rec))
+	{
+#if !RENDER_SURFACE_NORMAL
+		vec3 direction = random_on_hemisphere(rec.normal);
+		colorRet = 0.5 * RayColor_BinaryBVH(bvh, ray(rec.p, direction), world);
+#else
+		colorRet = 0.5 * (rec.normal + color(1, 1, 1));
+#endif // RENDER_SURFACE_NORMAL
+	}
+	else
+	{
+		vec3 unitDirection = unit_vector(r.direction());
+		double a = 0.5 * (unitDirection.y() + 1.0);
+		colorRet = (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
+	}
+
+	return colorRet;
+
+}
+
+
+
+
+
 ray camera::GetRay(int i, int j) const
 {
 	// Construct a camera ray originating from the origin and directed at
 	// randomly sampled point around the pixel location i, j.
 
 	auto offset = SampleSquare();
-	auto pixelSample = mPixelZeroLocation
-					  + ((i + offset.x()) * mPixelDeltaX)
-					  + ((j + offset.y()) * mPixelDeltaY);
+	auto pixelSample = mPixelZeroLocation +
+	                   ((i + offset.x()) * mPixelDeltaX) +
+	                   ((j + offset.y()) * mPixelDeltaY);
 
 	auto rayOrigin = mCameraCenter;
 	auto rayDirection = pixelSample - rayOrigin;
