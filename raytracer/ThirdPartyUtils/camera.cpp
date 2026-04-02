@@ -15,6 +15,15 @@
 
 
 
+#define USE_BVH \
+	BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH || \
+	BVH4_TOP_DOWN_EVEN_SPLIT || \
+	BVH8_TOP_DOWN_EVEN_SPLIT
+
+
+
+
+
 // ===========================================================================
 //		Includes
 // ---------------------------------------------------------------------------
@@ -53,11 +62,19 @@ bool camera::Render(const Scene& world, RACCPPM::PPMImage& imageBuffer)
 	if(imageBufferValid)
 	{
 		// Build BVH
-#if BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH
+#if USE_BVH
 		std::vector<const Primitive*> allPrimitives;
 		world.GatherAllWorldPrimitives(allPrimitives);
-		std::unique_ptr<BVHBinaryNode> bvhTree = BuildBinaryBVH_MedianSplit(allPrimitives, 0, allPrimitives.size());
-#endif // BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH
+#endif // USE_BVH
+
+#if BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH
+		std::unique_ptr<BVHBinaryNode> bvhTree = BuildBVH2_MedianSplit(allPrimitives, 0, allPrimitives.size());
+#elif BVH4_TOP_DOWN_EVEN_SPLIT
+		std::unique_ptr<BVH4Node> bvhTree = BuildBVH4_EvenSplit(allPrimitives, 0, allPrimitives.size());
+#elif BVH8_TOP_DOWN_EVEN_SPLIT
+		std::unique_ptr<BVH8Node> bvhTree = BuildBVH8_EvenSplit(allPrimitives, 0, allPrimitives.size());
+#endif // BVH BUILD STRATEGY
+
 
 		// Render
 		for (int j = 0; j < mImageHeight; j++)
@@ -74,10 +91,14 @@ bool camera::Render(const Scene& world, RACCPPM::PPMImage& imageBuffer)
 				{
 					ray r = GetRay(i, j);
 #if BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH
-					pixelColor += RayColor_BinaryBVH(bvhTree.get(), r, world);
+					pixelColor += RayColor_BVH2(bvhTree.get(), r, world);
+#elif BVH4_TOP_DOWN_EVEN_SPLIT
+					pixelColor += RayColor_BVH4(bvhTree.get(), r, world);
+#elif BVH8_TOP_DOWN_EVEN_SPLIT
+					pixelColor += RayColor_BVH8(bvhTree.get(), r, world);
 #else // NAIVE
 					pixelColor += RayColor(r, world);
-#endif // BVH_TYPE
+#endif // BVH HIT ALGORITHM
 				}
 				static const interval intensity(0.000, 0.999);
 
@@ -245,18 +266,18 @@ color camera::RayColor(const ray& r, const Scene& world) const
 
 
 
-color camera::RayColor_BinaryBVH(BVHBinaryNode* bvh,
+color camera::RayColor_BVH2(BVHBinaryNode* bvh,
                                  const ray& r,
                                  const Scene& world) const
 {
 	color colorRet;
 
 	hit_record rec;
-	if (HitBVH_BinaryTree(bvh, r, interval(0, infinity), rec))
+	if (HitBVH2(bvh, r, interval(0, infinity), rec))
 	{
 #if !RENDER_SURFACE_NORMAL
 		vec3 direction = random_on_hemisphere(rec.normal);
-		colorRet = 0.5 * RayColor_BinaryBVH(bvh, ray(rec.p, direction), world);
+		colorRet = 0.5 * RayColor_BVH2(bvh, ray(rec.p, direction), world);
 #else
 		colorRet = 0.5 * (rec.normal + color(1, 1, 1));
 #endif // RENDER_SURFACE_NORMAL
@@ -270,6 +291,66 @@ color camera::RayColor_BinaryBVH(BVHBinaryNode* bvh,
 
 	return colorRet;
 
+}
+
+
+
+
+
+color camera::RayColor_BVH4(BVH4Node* bvh,
+                            const ray& r,
+                            const Scene& world) const
+{
+	color colorRet;
+
+	hit_record rec;
+	if (HitBVH4(bvh, r, interval(0, infinity), rec))
+	{
+#if !RENDER_SURFACE_NORMAL
+		vec3 direction = random_on_hemisphere(rec.normal);
+		colorRet = 0.5 * RayColor_BVH4(bvh, ray(rec.p, direction), world);
+#else
+		colorRet = 0.5 * (rec.normal + color(1, 1, 1));
+#endif // RENDER_SURFACE_NORMAL
+	}
+	else
+	{
+		vec3 unitDirection = unit_vector(r.direction());
+		double a = 0.5 * (unitDirection.y() + 1.0);
+		colorRet = (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
+	}
+
+	return colorRet;
+}
+
+
+
+
+
+color camera::RayColor_BVH8(BVH8Node* bvh,
+                            const ray& r,
+                            const Scene& world) const
+{
+	color colorRet;
+
+	hit_record rec;
+	if (HitBVH8(bvh, r, interval(0, infinity), rec))
+	{
+#if !RENDER_SURFACE_NORMAL
+		vec3 direction = random_on_hemisphere(rec.normal);
+		colorRet = 0.5 * RayColor_BVH8(bvh, ray(rec.p, direction), world);
+#else
+		colorRet = 0.5 * (rec.normal + color(1, 1, 1));
+#endif // RENDER_SURFACE_NORMAL
+	}
+	else
+	{
+		vec3 unitDirection = unit_vector(r.direction());
+		double a = 0.5 * (unitDirection.y() + 1.0);
+		colorRet = (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
+	}
+
+	return colorRet;
 }
 
 

@@ -80,9 +80,15 @@ namespace RTIW
 		void Initialize();
 
 		color RayColor(const ray& r, const Scene& world) const;
-		color RayColor_BinaryBVH(BVHBinaryNode* bvh,
-		                         const ray& r,
-		                         const Scene& world) const;
+		color RayColor_BVH2(BVHBinaryNode* bvh,
+		                    const ray& r,
+		                    const Scene& world) const;
+		color RayColor_BVH4(BVH4Node* bvh,
+		                    const ray& r,
+		                    const Scene& world) const;
+		color RayColor_BVH8(BVH8Node* bvh,
+		                    const ray& r,
+		                    const Scene& world) const;
 
 		ray GetRay(int i, int j) const;
 

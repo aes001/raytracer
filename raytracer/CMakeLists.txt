@@ -32,6 +32,14 @@ RACC_DEFINE_EXECUTABLE_TARGET(${PROJECT_NAME})
 set (RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH "RayTracer-TD_MS_BVH2")
 RACC_DEFINE_EXECUTABLE_TARGET(${RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH})
 
+# With BVH4
+set (RT_BVH4_TOP_DOWN_MEDIAN_SPLIT "RayTracer-TD_MS_BVH4")
+RACC_DEFINE_EXECUTABLE_TARGET(${RT_BVH4_TOP_DOWN_MEDIAN_SPLIT})
+
+# With BVH8
+set (RT_BVH8_TOP_DOWN_EVEN_SPLIT "RayTracer-TD_MS_BVH8")
+RACC_DEFINE_EXECUTABLE_TARGET(${RT_BVH8_TOP_DOWN_EVEN_SPLIT})
+
 
 # Also make our libraries available
 add_subdirectory(RaccPPM)
@@ -76,6 +84,15 @@ set (MY_OWN_STUFF_SRC
 )
 
 
+set (MY_OWN_STUFF_HEADERS
+	"convenientNumerics.hpp"
+	"MatAndVec/matrices.hpp"
+	"MatAndVec/mat44.hpp"
+	"triangulatedMesh.hpp"
+	"triangle.hpp"
+)
+
+
 
 
 
@@ -110,6 +127,7 @@ set (RT_BASIC_SRC
 
 
 set (RT_BASIC_INCLUDE_DIRS
+	${MY_OWN_STUFF_HEADERS}
 	MatAndVec
 	RaccDebug
 	RaccPPM
@@ -172,6 +190,54 @@ target_link_libraries(${RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH}
 	PUBLIC
 		${RT_BASIC_LIBS}
 )
+
+
+
+# RAY TRACER: BVH4 TOP DOWN EVEN SPLIT
+target_compile_definitions(${RT_BVH4_TOP_DOWN_MEDIAN_SPLIT}
+	PRIVATE
+		BVH4_TOP_DOWN_EVEN_SPLIT=1
+)
+
+target_sources(${RT_BVH4_TOP_DOWN_MEDIAN_SPLIT}
+	PRIVATE
+		${RT_BASIC_SRC}
+)
+
+target_include_directories(${RT_BVH4_TOP_DOWN_MEDIAN_SPLIT}
+	PRIVATE
+		${RT_BASIC_INCLUDE_DIRS}
+)
+
+target_link_libraries(${RT_BVH4_TOP_DOWN_MEDIAN_SPLIT}
+	PUBLIC
+		${RT_BASIC_LIBS}
+)
+
+
+
+# RAY TRACER: BVH8 TOP DOWN EVEN SPLIT
+target_compile_definitions(${RT_BVH8_TOP_DOWN_EVEN_SPLIT}
+	PRIVATE
+		BVH8_TOP_DOWN_EVEN_SPLIT=1
+)
+
+target_sources(${RT_BVH8_TOP_DOWN_EVEN_SPLIT}
+	PRIVATE
+		${RT_BASIC_SRC}
+)
+
+target_include_directories(${RT_BVH8_TOP_DOWN_EVEN_SPLIT}
+	PRIVATE
+		${RT_BASIC_INCLUDE_DIRS}
+)
+
+target_link_libraries(${RT_BVH8_TOP_DOWN_EVEN_SPLIT}
+	PUBLIC
+		${RT_BASIC_LIBS}
+)
+
+
 
 
 
