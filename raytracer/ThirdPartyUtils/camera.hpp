@@ -73,21 +73,25 @@ namespace RTIW
 		void SetWidth(int width);
 		void SetAspectRatio(double aspectRatio);
 		void SetSampleCount(int sampleCount);
+		void SetMaxDepth(int maxDepth);
 
 
 
 	private:
 		void Initialize();
 
-		color RayColor(const ray& r, const Scene& world) const;
+		color RayColor(const ray& r, int maxDepth, const Scene& world) const;
 		color RayColor_BVH2(BVHBinaryNode* bvh,
 		                    const ray& r,
+		                    int maxDepth,
 		                    const Scene& world) const;
 		color RayColor_BVH4(BVH4Node* bvh,
 		                    const ray& r,
+		                    int maxDepth,
 		                    const Scene& world) const;
 		color RayColor_BVH8(BVH8Node* bvh,
 		                    const ray& r,
+		                    int maxDepth,
 		                    const Scene& world) const;
 
 		ray GetRay(int i, int j) const;
@@ -97,6 +101,7 @@ namespace RTIW
 		double mAspectRatio = 1;
 		int mImageWidth = 100;
 		int mSamplesPerPixel = 10;
+		int mMaxDepth = 10;
 
 		// These should not be user setttable
 		int mImageHeight;

@@ -91,13 +91,13 @@ bool camera::Render(const Scene& world, RACCPPM::PPMImage& imageBuffer)
 				{
 					ray r = GetRay(i, j);
 #if BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH
-					pixelColor += RayColor_BVH2(bvhTree.get(), r, world);
+					pixelColor += RayColor_BVH2(bvhTree.get(), r, mMaxDepth, world);
 #elif BVH4_TOP_DOWN_EVEN_SPLIT
-					pixelColor += RayColor_BVH4(bvhTree.get(), r, world);
+					pixelColor += RayColor_BVH4(bvhTree.get(), r, mMaxDepth, world);
 #elif BVH8_TOP_DOWN_EVEN_SPLIT
-					pixelColor += RayColor_BVH8(bvhTree.get(), r, world);
+					pixelColor += RayColor_BVH8(bvhTree.get(), r, mMaxDepth, world);
 #else // NAIVE
-					pixelColor += RayColor(r, world);
+					pixelColor += RayColor(r, mMaxDepth, world);
 #endif // BVH HIT ALGORITHM
 				}
 				static const interval intensity(0.000, 0.999);
@@ -188,6 +188,16 @@ void camera::SetSampleCount(int sampleCount)
 
 
 
+
+void camera::SetMaxDepth(int maxDepth)
+{
+	mMaxDepth = maxDepth;
+}
+
+
+
+
+
 // ===========================================================================
 //		camera : Initialize
 // ---------------------------------------------------------------------------
@@ -238,16 +248,21 @@ void camera::Initialize()
 // ===========================================================================
 //		camera : Ray Color
 // ---------------------------------------------------------------------------
-color camera::RayColor(const ray& r, const Scene& world) const
+color camera::RayColor(const ray& r, int depth, const Scene& world) const
 {
+	if (depth <= 0)
+	{
+		return color(0, 0, 0);
+	}
+
 	color colorRet;
 
 	hit_record rec;
-	if (world.hit(r, interval(0, infinity), rec))
+	if (world.hit(r, interval(0.001, infinity), rec))
 	{
 #if !RENDER_SURFACE_NORMAL
-		vec3 direction = random_on_hemisphere(rec.normal);
-		colorRet = 0.5 * RayColor(ray(rec.p, direction), world);
+		vec3 direction = rec.normal + random_on_hemisphere(rec.normal);
+		colorRet = 0.5 * RayColor(ray(rec.p, direction), depth - 1, world);
 #else
 		colorRet = 0.5 * (rec.normal + color(1, 1, 1));
 #endif // RENDER_SURFACE_NORMAL
@@ -267,17 +282,26 @@ color camera::RayColor(const ray& r, const Scene& world) const
 
 
 color camera::RayColor_BVH2(BVHBinaryNode* bvh,
-                                 const ray& r,
-                                 const Scene& world) const
+                            const ray& r,
+                            int depth,
+                            const Scene& world) const
 {
+	RACC_REQUIRE(bvh, "Error BVH Tree invalid!");
+
+	if (depth <= 0)
+	{
+		return color(0, 0, 0);
+	}
+
 	color colorRet;
 
 	hit_record rec;
-	if (HitBVH2(bvh, r, interval(0, infinity), rec))
+
+	if (HitBVH2(bvh, r, interval(0.001, infinity), rec))
 	{
 #if !RENDER_SURFACE_NORMAL
-		vec3 direction = random_on_hemisphere(rec.normal);
-		colorRet = 0.5 * RayColor_BVH2(bvh, ray(rec.p, direction), world);
+		vec3 direction = rec.normal + random_on_hemisphere(rec.normal);
+		colorRet = 0.5 * RayColor_BVH2(bvh, ray(rec.p, direction), depth - 1, world);
 #else
 		colorRet = 0.5 * (rec.normal + color(1, 1, 1));
 #endif // RENDER_SURFACE_NORMAL
@@ -299,16 +323,24 @@ color camera::RayColor_BVH2(BVHBinaryNode* bvh,
 
 color camera::RayColor_BVH4(BVH4Node* bvh,
                             const ray& r,
+                            int depth,
                             const Scene& world) const
 {
+	RACC_REQUIRE(bvh, "Error BVH Tree invalid!");
+
+	if (depth <= 0)
+	{
+		return color(0, 0, 0);
+	}
+
 	color colorRet;
 
 	hit_record rec;
-	if (HitBVH4(bvh, r, interval(0, infinity), rec))
+	if (HitBVH4(bvh, r, interval(0.001, infinity), rec))
 	{
 #if !RENDER_SURFACE_NORMAL
-		vec3 direction = random_on_hemisphere(rec.normal);
-		colorRet = 0.5 * RayColor_BVH4(bvh, ray(rec.p, direction), world);
+		vec3 direction = rec.normal + random_on_hemisphere(rec.normal);
+		colorRet = 0.5 * RayColor_BVH4(bvh, ray(rec.p, direction), depth - 1, world);
 #else
 		colorRet = 0.5 * (rec.normal + color(1, 1, 1));
 #endif // RENDER_SURFACE_NORMAL
@@ -329,16 +361,24 @@ color camera::RayColor_BVH4(BVH4Node* bvh,
 
 color camera::RayColor_BVH8(BVH8Node* bvh,
                             const ray& r,
+                            int depth,
                             const Scene& world) const
 {
+	RACC_REQUIRE(bvh, "Error BVH Tree invalid!");
+
+	if (depth <= 0)
+	{
+		return color(0, 0, 0);
+	}
+
 	color colorRet;
 
 	hit_record rec;
-	if (HitBVH8(bvh, r, interval(0, infinity), rec))
+	if (HitBVH8(bvh, r, interval(0.001, infinity), rec))
 	{
 #if !RENDER_SURFACE_NORMAL
-		vec3 direction = random_on_hemisphere(rec.normal);
-		colorRet = 0.5 * RayColor_BVH8(bvh, ray(rec.p, direction), world);
+		vec3 direction = rec.normal + random_on_hemisphere(rec.normal);
+		colorRet = 0.5 * RayColor_BVH8(bvh, ray(rec.p, direction), depth - 1, world);
 #else
 		colorRet = 0.5 * (rec.normal + color(1, 1, 1));
 #endif // RENDER_SURFACE_NORMAL
