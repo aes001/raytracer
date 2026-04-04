@@ -24,6 +24,9 @@
 #include "hittable.hpp"
 #include "vec.hpp"
 
+// Standard Library
+#include <optional>
+
 
 
 
@@ -36,20 +39,28 @@ namespace RTIW
 
 	struct AABB
 	{
-		vec3 mMin;
-		vec3 mMax;
+		vec3 mMin = vec3(+infinity, +infinity, +infinity);
+		vec3 mMax = vec3(-infinity, -infinity, -infinity);
 
 		vec3 Centroid() const noexcept;
 		vec3 Extent() const noexcept;
 		int LongestAxis() const noexcept;
+
+		double SurfaceArea() const noexcept;
 	};
 
 
 	AABB CombineAABB(const AABB& a, const AABB& b);
 
+	AABB ExpandAABBByPoint(const AABB& a, const vec3& point);
+
 	AABB ComputeBounds(const std::vector<const Primitive*>& primitivesList,
 	                   const std::size_t start,
 	                   const std::size_t end);
+
+	AABB ComputeCentroidBounds(const std::vector<const Primitive *>& primitivesList,
+	                           std::size_t start,
+	                           std::size_t end);
 
 	bool HitAABB(const AABB& box, const ray& ray, interval& interval);
 
@@ -138,6 +149,42 @@ namespace RTIW
 	             const ray& ray,
 	             interval interval,
 	             hit_record& hitRecord);
+
+
+
+
+
+	struct BVH2Node_VariableChild
+	{
+		AABB mBoundingBox;
+
+		std::unique_ptr<BVH2Node_VariableChild> mLeftNode;
+		std::unique_ptr<BVH2Node_VariableChild> mRightNode;
+
+		std::vector<const Primitive*> mChildPrimitives;
+
+		bool IsLeaf() const noexcept;
+	};
+
+
+//	double ComputeSAHSplitCost(
+//		std::vector<const Primitive*>& primitivesList,
+//		const std::size_t start,
+//		const std::size_t end);
+
+
+
+	std::unique_ptr<BVH2Node_VariableChild> BuildBVH2_SAH_Naive(
+		std::vector<const Primitive*>& primitivesList,
+		const std::size_t start,
+		const std::size_t end,
+		std::optional<AABB> preComputedBB
+		);
+
+	bool HitBVH2_VariableChild(const BVH2Node_VariableChild* node,
+	                           const ray& ray,
+	                           interval interval,
+	                           hit_record& hitRecord);
 
 
 

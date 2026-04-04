@@ -93,6 +93,10 @@ namespace RTIW
 		                    const ray& r,
 		                    int maxDepth,
 		                    const Scene& world) const;
+		color RayColor_BVH2_VariableChildNode(BVH2Node_VariableChild* bvh,
+		                                      const ray& r,
+		                                      int maxDepth,
+		                                      const Scene& world) const;
 
 		ray GetRay(int i, int j) const;
 

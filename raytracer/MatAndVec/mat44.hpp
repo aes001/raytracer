@@ -89,7 +89,6 @@ namespace RTIW
 
 
 
-	// Functions:
 	inline
 	Mat44d transpose(Mat44d const& aM) noexcept
 	{

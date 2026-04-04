@@ -29,16 +29,20 @@ project(RayTracer)
 RACC_DEFINE_EXECUTABLE_TARGET(${PROJECT_NAME})
 
 # With Binary BVH
-set (RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH "RayTracer-TD_MS_BVH2")
+set (RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH "RayTracer-TD_ES_BVH2")
 RACC_DEFINE_EXECUTABLE_TARGET(${RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH})
 
 # With BVH4
-set (RT_BVH4_TOP_DOWN_MEDIAN_SPLIT "RayTracer-TD_MS_BVH4")
+set (RT_BVH4_TOP_DOWN_MEDIAN_SPLIT "RayTracer-TD_ES_BVH4")
 RACC_DEFINE_EXECUTABLE_TARGET(${RT_BVH4_TOP_DOWN_MEDIAN_SPLIT})
 
 # With BVH8
-set (RT_BVH8_TOP_DOWN_EVEN_SPLIT "RayTracer-TD_MS_BVH8")
+set (RT_BVH8_TOP_DOWN_EVEN_SPLIT "RayTracer-TD_ES_BVH8")
 RACC_DEFINE_EXECUTABLE_TARGET(${RT_BVH8_TOP_DOWN_EVEN_SPLIT})
+
+# With BVH2 NAIVE SAH
+set (RT_BVH2_TOP_DOWN_NAIVE_SAH "RayTracer-TD_NSAH_BVH2")
+RACC_DEFINE_EXECUTABLE_TARGET(${RT_BVH2_TOP_DOWN_NAIVE_SAH})
 
 
 # Also make our libraries available
@@ -151,93 +155,62 @@ set (RT_BASIC_LIBS
 #===========================================================
 #	5. Link
 #-----------------------------------------------------------
+function(TARGET_LINK_FILES projectName)
+	target_sources(${projectName}
+		PRIVATE
+			${RT_BASIC_SRC}
+	)
+
+	target_include_directories(${projectName}
+		PRIVATE
+			${RT_BASIC_INCLUDE_DIRS}
+	)
+
+	target_link_libraries(${projectName}
+		PUBLIC
+			${RT_BASIC_LIBS}
+	)
+endfunction()
+
 
 # RAY TRACER: NAIVE
-target_sources(${PROJECT_NAME}
-	PRIVATE
-		${RT_BASIC_SRC}
-)
-
-target_include_directories(${PROJECT_NAME}
-	PRIVATE
-		${RT_BASIC_INCLUDE_DIRS}
-)
-
-target_link_libraries(${PROJECT_NAME}
-	PUBLIC
-		${RT_BASIC_LIBS}
-)
+TARGET_LINK_FILES(${PROJECT_NAME})
 
 
 
 # RAY TRACER: BINARY TOP DOWN MEDIAN SPLIT BVH
+TARGET_LINK_FILES(${RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH})
 target_compile_definitions(${RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH}
 	PRIVATE
 		BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH=1
 )
 
-target_sources(${RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH}
-	PRIVATE
-		${RT_BASIC_SRC}
-)
-
-target_include_directories(${RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH}
-	PRIVATE
-		${RT_BASIC_INCLUDE_DIRS}
-)
-
-target_link_libraries(${RT_BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH}
-	PUBLIC
-		${RT_BASIC_LIBS}
-)
-
 
 
 # RAY TRACER: BVH4 TOP DOWN EVEN SPLIT
+TARGET_LINK_FILES(${RT_BVH4_TOP_DOWN_MEDIAN_SPLIT})
 target_compile_definitions(${RT_BVH4_TOP_DOWN_MEDIAN_SPLIT}
 	PRIVATE
 		BVH4_TOP_DOWN_EVEN_SPLIT=1
 )
 
-target_sources(${RT_BVH4_TOP_DOWN_MEDIAN_SPLIT}
-	PRIVATE
-		${RT_BASIC_SRC}
-)
-
-target_include_directories(${RT_BVH4_TOP_DOWN_MEDIAN_SPLIT}
-	PRIVATE
-		${RT_BASIC_INCLUDE_DIRS}
-)
-
-target_link_libraries(${RT_BVH4_TOP_DOWN_MEDIAN_SPLIT}
-	PUBLIC
-		${RT_BASIC_LIBS}
-)
-
 
 
 # RAY TRACER: BVH8 TOP DOWN EVEN SPLIT
+TARGET_LINK_FILES(${RT_BVH8_TOP_DOWN_EVEN_SPLIT})
 target_compile_definitions(${RT_BVH8_TOP_DOWN_EVEN_SPLIT}
 	PRIVATE
 		BVH8_TOP_DOWN_EVEN_SPLIT=1
 )
 
-target_sources(${RT_BVH8_TOP_DOWN_EVEN_SPLIT}
+
+
+# RAY TRACER: BVH2 TOP DOWN NAIVE SAH
+TARGET_LINK_FILES(${RT_BVH2_TOP_DOWN_NAIVE_SAH})
+target_compile_definitions(${RT_BVH2_TOP_DOWN_NAIVE_SAH}
 	PRIVATE
-		${RT_BASIC_SRC}
+		BVH2_TOP_DOWN_NAIVE_SAH=1
 )
-
-target_include_directories(${RT_BVH8_TOP_DOWN_EVEN_SPLIT}
-	PRIVATE
-		${RT_BASIC_INCLUDE_DIRS}
-)
-
-target_link_libraries(${RT_BVH8_TOP_DOWN_EVEN_SPLIT}
-	PUBLIC
-		${RT_BASIC_LIBS}
-)
-
-
 
 
 

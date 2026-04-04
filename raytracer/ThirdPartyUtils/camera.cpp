@@ -17,9 +17,9 @@
 
 #define USE_BVH \
 	BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH || \
-	BVH4_TOP_DOWN_EVEN_SPLIT || \
-	BVH8_TOP_DOWN_EVEN_SPLIT
-
+	BVH4_TOP_DOWN_EVEN_SPLIT ||         \
+	BVH8_TOP_DOWN_EVEN_SPLIT ||         \
+	BVH2_TOP_DOWN_NAIVE_SAH
 
 
 
@@ -32,6 +32,9 @@
 #include "hittable.hpp"
 #include "RaccPPMToRTIWBridge.inl"
 #include "RaccDebug.hpp"
+
+// Standard Library
+#include <optional>
 
 
 
@@ -73,6 +76,8 @@ bool camera::Render(const Scene& world, RACCPPM::PPMImage& imageBuffer)
 		std::unique_ptr<BVH4Node> bvhTree = BuildBVH4_EvenSplit(allPrimitives, 0, allPrimitives.size());
 #elif BVH8_TOP_DOWN_EVEN_SPLIT
 		std::unique_ptr<BVH8Node> bvhTree = BuildBVH8_EvenSplit(allPrimitives, 0, allPrimitives.size());
+#elif BVH2_TOP_DOWN_NAIVE_SAH
+		std::unique_ptr<BVH2Node_VariableChild> bvhTree = BuildBVH2_SAH_Naive(allPrimitives, 0, allPrimitives.size(), std::nullopt);
 #endif // BVH BUILD STRATEGY
 
 
@@ -96,6 +101,8 @@ bool camera::Render(const Scene& world, RACCPPM::PPMImage& imageBuffer)
 					pixelColor += RayColor_BVH4(bvhTree.get(), r, mMaxDepth, world);
 #elif BVH8_TOP_DOWN_EVEN_SPLIT
 					pixelColor += RayColor_BVH8(bvhTree.get(), r, mMaxDepth, world);
+#elif BVH2_TOP_DOWN_NAIVE_SAH
+					pixelColor += RayColor_BVH2_VariableChildNode(bvhTree.get(), r, mMaxDepth, world);
 #else // NAIVE
 					pixelColor += RayColor(r, mMaxDepth, world);
 #endif // BVH HIT ALGORITHM
@@ -392,6 +399,46 @@ color camera::RayColor_BVH8(BVH8Node* bvh,
 
 	return colorRet;
 }
+
+
+
+
+
+color camera::RayColor_BVH2_VariableChildNode(BVH2Node_VariableChild* bvh,
+                                              const ray& r,
+                                              int depth,
+                                              const Scene& world) const
+{
+	RACC_REQUIRE(bvh, "Error BVH Tree invalid!");
+
+	if (depth <= 0)
+	{
+		return color(0, 0, 0);
+	}
+
+	color colorRet;
+
+	hit_record rec;
+	if (HitBVH2_VariableChild(bvh, r, interval(0.001, infinity), rec))
+	{
+#if !RENDER_SURFACE_NORMAL
+		vec3 direction = rec.normal + random_on_hemisphere(rec.normal);
+		colorRet = 0.5 * RayColor_BVH2_VariableChildNode(bvh, ray(rec.p, direction), depth - 1, world);
+#else
+		colorRet = 0.5 * (rec.normal + color(1, 1, 1));
+#endif // RENDER_SURFACE_NORMAL
+	}
+	else
+	{
+		vec3 unitDirection = unit_vector(r.direction());
+		double a = 0.5 * (unitDirection.y() + 1.0);
+		colorRet = (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
+	}
+
+	return colorRet;
+
+}
+
 
 
 

@@ -73,6 +73,22 @@ int AABB::LongestAxis() const noexcept
 
 
 
+double AABB::SurfaceArea() const noexcept
+{
+	double dx = mMax.x() - mMin.x();
+	double dy = mMax.y() - mMin.y();
+	double dz = mMax.z() - mMin.z();
+
+	RACC_REQUIRE(dx >= 0.0 || dy >= 0.0 || dz >= 0.0,
+	             "Error: Invalid bounding box, min and max might be switched");
+
+	return 2.0 * ((dx * dy) + (dx * dz) + (dy * dz));
+}
+
+
+
+
+
 bool BVHBinaryNode::IsLeaf() const noexcept
 {
 	return Primitive != nullptr;
@@ -93,6 +109,23 @@ AABB RTIW::CombineAABB(const AABB& a, const AABB& b)
 		     std::max(a.mMax.y(), b.mMax.y()),
 		     std::max(a.mMax.z(), b.mMax.z())}
 
+	};
+}
+
+
+
+
+
+AABB RTIW::ExpandAABBByPoint(const AABB& a, const vec3& point)
+{
+	return AABB{
+		vec3{std::min(a.mMin.x(), point.x()),
+		     std::min(a.mMin.y(), point.y()),
+		     std::min(a.mMin.z(), point.z())},
+
+		vec3{std::max(a.mMax.x(), point.x()),
+		     std::max(a.mMax.y(), point.y()),
+		     std::max(a.mMax.z(), point.z())}
 	};
 }
 
@@ -141,12 +174,32 @@ AABB RTIW::ComputeBounds(const std::vector<const Primitive *>& primitivesList,
 
 	for (auto it = primitivesList.begin() + start + 1;
 	     it != primitivesList.begin() + end;
-	     it++)
+	     ++it)
 	{
 		bounds = CombineAABB(bounds, (*it)->GetBoundingBox());
 	}
 
 	return bounds;
+}
+
+
+
+
+
+AABB RTIW::ComputeCentroidBounds(const std::vector<const Primitive *>& primitivesList,
+                                 std::size_t start,
+                                 std::size_t end)
+{
+	AABB centroidBounds;
+
+	for (auto it = primitivesList.begin() + start;
+	     it != primitivesList.begin() + end;
+	     ++it)
+	{
+		centroidBounds = ExpandAABBByPoint(centroidBounds, (*it)->GetBoundingBox().Centroid());
+	}
+
+	return centroidBounds;
 }
 
 
@@ -585,6 +638,203 @@ bool RTIW::HitBVH8(const BVH8Node* node,
 	}
 
 	return hit;
+}
+
+
+
+
+
+bool BVH2Node_VariableChild::IsLeaf() const noexcept
+{
+	return (mLeftNode == nullptr) && (mRightNode == nullptr);
+}
+
+
+
+
+
+std::unique_ptr<BVH2Node_VariableChild> RTIW::BuildBVH2_SAH_Naive(
+	std::vector<const Primitive*>& primitivesList,
+	const std::size_t start,
+	const std::size_t end,
+	std::optional<AABB> preComputedBB)
+{
+	auto node = std::make_unique<BVH2Node_VariableChild>();
+
+	if (preComputedBB.has_value())
+	{
+		node->mBoundingBox = preComputedBB.value();
+	}
+	else
+	{
+		node->mBoundingBox = ComputeBounds(primitivesList, start, end);
+	}
+
+	const std::size_t primitiveCount = end - start;
+
+	if (primitiveCount == 1)
+	{
+		node->mChildPrimitives.push_back(primitivesList[start]);
+		return node;
+	}
+
+	const auto GenerateSortFunc = []
+		(std::size_t index)
+		{
+			return [index] (const Primitive* a, const Primitive* b)
+				{
+					return a->GetBoundingBox().Centroid()[index] <
+					       b->GetBoundingBox().Centroid()[index];
+				};
+		};
+
+	double cheapestSplitCost = +infinity;
+	std::size_t cheapestSplitIndex = static_cast<std::size_t>(start + primitiveCount / 2);
+	std::size_t idealAxis = 0;
+	AABB leftIdealBB;
+	AABB rightIdealBB;
+
+	for (std::size_t axis = 0; axis < 3; ++axis)
+	{
+		std::sort(primitivesList.begin() + start,
+		          primitivesList.begin() + end,
+		          GenerateSortFunc(axis));
+
+		for (std::size_t splitIndex = start + 1; splitIndex < end; ++splitIndex)
+		{
+			AABB leftBB  = ComputeBounds(primitivesList, start,      splitIndex);
+			AABB rightBB = ComputeBounds(primitivesList, splitIndex, end);
+
+			const double leftCost  =
+				(leftBB.SurfaceArea() / node->mBoundingBox.SurfaceArea()) *
+				(splitIndex - start);
+			const double rightCost =
+				(rightBB.SurfaceArea() / node->mBoundingBox.SurfaceArea()) *
+				(end - splitIndex);
+
+			const double totalCost = leftCost + rightCost + 1;
+
+			if (totalCost < cheapestSplitCost)
+			{
+				cheapestSplitCost = totalCost;
+				cheapestSplitIndex = splitIndex;
+
+				leftIdealBB = leftBB;
+				rightIdealBB = rightBB;
+				idealAxis = axis;
+			}
+		}
+	}
+
+
+	// Check how much it costs if we build a leaf instead
+	const double leafCost = static_cast<double>(primitiveCount);
+
+	const bool cheaperToMakeLeaf = leafCost <= cheapestSplitCost;
+	if (cheaperToMakeLeaf)
+	{
+		for (auto it = primitivesList.begin() + start;
+		     it != primitivesList.begin() + end;
+		     ++it)
+		{
+			node->mChildPrimitives.push_back(*it);
+		}
+	}
+	else
+	{
+		std::sort(primitivesList.begin() + start,
+		          primitivesList.begin() + end,
+		          GenerateSortFunc(idealAxis));
+
+		node->mLeftNode = BuildBVH2_SAH_Naive(primitivesList, start, cheapestSplitIndex, leftIdealBB);
+		node->mRightNode = BuildBVH2_SAH_Naive(primitivesList, cheapestSplitIndex, end, rightIdealBB);
+	}
+
+	return node;
+}
+
+
+
+
+
+bool RTIW::HitBVH2_VariableChild(const BVH2Node_VariableChild* node,
+                                 const ray& ray,
+                                 interval validTimeInterval,
+                                 hit_record& hitRecord)
+{
+	if (!node)
+	{
+		return false;
+	}
+
+
+	if (!HitAABB(node->mBoundingBox, ray, validTimeInterval)) // Will resize the interval to the BB enter and exit
+	{
+		return false;
+	}
+
+
+	if (node->IsLeaf())
+	{
+		hit_record tempRec;
+		bool hitAnything = false;
+		double closestSoFar = validTimeInterval.max;
+
+		for (const auto* primitive : node->mChildPrimitives)
+		{
+			if (primitive->hit(ray, interval(validTimeInterval.min, closestSoFar), tempRec))
+			{
+				hitAnything = true;
+				closestSoFar = tempRec.t;
+				hitRecord = tempRec;
+			}
+		}
+
+		return hitAnything;
+	}
+
+
+	hit_record leftHitRecord;
+	hit_record rightHitRecord;
+
+	bool hitLeft = false;
+	bool hitRight = false;
+
+	if (node->mLeftNode)
+	{
+		hitLeft = HitBVH2_VariableChild(node->mLeftNode.get(), ray, validTimeInterval, leftHitRecord);
+	}
+
+	if (hitLeft)
+	{
+		validTimeInterval.max = leftHitRecord.t;
+	}
+
+	if (node->mRightNode)
+	{
+		hitRight = HitBVH2_VariableChild(node->mRightNode.get(), ray, validTimeInterval, rightHitRecord);
+	}
+
+	if (hitLeft && hitRight)
+	{
+		hitRecord = (leftHitRecord.t < rightHitRecord.t) ? leftHitRecord : rightHitRecord;
+		return true;
+	}
+
+	if (hitLeft)
+	{
+		hitRecord = leftHitRecord;
+		return true;
+	}
+
+	if (hitRight)
+	{
+		hitRecord = rightHitRecord;
+		return true;
+	}
+
+
+	return false;
 }
 
 
