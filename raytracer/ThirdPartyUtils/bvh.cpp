@@ -700,24 +700,41 @@ std::unique_ptr<BVH2Node_VariableChild> RTIW::BuildBVH2_SAH_Naive(
 		          primitivesList.begin() + end,
 		          GenerateSortFunc(axis));
 
-		for (std::size_t splitIndex = start + 1; splitIndex < end; ++splitIndex)
+		std::vector<AABB> prefix(primitiveCount);
+		std::vector<AABB> suffix(primitiveCount);
+
+		AABB prefixMaster;
+		AABB suffixMaster;
+		for (std::size_t i = 0; i < primitiveCount; ++i)
 		{
-			AABB leftBB  = ComputeBounds(primitivesList, start,      splitIndex);
-			AABB rightBB = ComputeBounds(primitivesList, splitIndex, end);
+			prefixMaster = CombineAABB(prefixMaster, primitivesList[i + start]->GetBoundingBox());
+			prefix[i] = prefixMaster;
+
+			suffixMaster = CombineAABB(suffixMaster, primitivesList[(end - 1) - i]->GetBoundingBox());
+			suffix[primitiveCount - 1 - i] = suffixMaster;
+		}
+
+		for (std::size_t i = 0; i < primitiveCount - 1; ++i)
+		{
+			AABB leftBB  = prefix[i];
+			AABB rightBB = suffix[i + 1];
+
+			const double leftPrimitiveCount = i + 1;
+			const double rightPrimitiveCount = primitiveCount - (1 + i);
 
 			const double leftCost  =
 				(leftBB.SurfaceArea() / node->mBoundingBox.SurfaceArea()) *
-				(splitIndex - start);
+				(leftPrimitiveCount);
 			const double rightCost =
 				(rightBB.SurfaceArea() / node->mBoundingBox.SurfaceArea()) *
-				(end - splitIndex);
+				(rightPrimitiveCount);
 
 			const double totalCost = leftCost + rightCost + 1;
 
 			if (totalCost < cheapestSplitCost)
 			{
 				cheapestSplitCost = totalCost;
-				cheapestSplitIndex = splitIndex;
+				cheapestSplitIndex = start + 1 + i;
 
 				leftIdealBB = leftBB;
 				rightIdealBB = rightBB;

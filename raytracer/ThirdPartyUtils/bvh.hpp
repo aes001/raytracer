@@ -190,6 +190,16 @@ namespace RTIW
 
 
 
+	std::unique_ptr<BVH2Node_VariableChild> BuildBVH2_BottomUp_Naive(
+		std::vector<const Primitive*>& primitivesList,
+		const std::size_t start,
+		const std::size_t end,
+		std::optional<AABB> preComputedBB
+		);
+
+
+
+
 
 }
 
