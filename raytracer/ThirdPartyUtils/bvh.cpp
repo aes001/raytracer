@@ -89,7 +89,7 @@ double AABB::SurfaceArea() const noexcept
 
 
 
-bool BVHBinaryNode::IsLeaf() const noexcept
+bool BVH2Node::IsLeaf() const noexcept
 {
 	return Primitive != nullptr;
 }
@@ -206,12 +206,12 @@ AABB RTIW::ComputeCentroidBounds(const std::vector<const Primitive *>& primitive
 
 
 
-std::unique_ptr<BVHBinaryNode> RTIW::BuildBVH2_MedianSplit(
+std::unique_ptr<BVH2Node> RTIW::BuildBVH2_MedianSplit(
 	std::vector<const Primitive*>& primitivesList,
 	const std::size_t start,
 	const std::size_t end)
 {
-	auto node = std::make_unique<BVHBinaryNode>();
+	auto node = std::make_unique<BVH2Node>();
 
 	node->mBoundingBox = ComputeBounds(primitivesList, start, end);
 
@@ -248,7 +248,7 @@ std::unique_ptr<BVHBinaryNode> RTIW::BuildBVH2_MedianSplit(
 
 
 
-bool RTIW::HitBVH2(const BVHBinaryNode* node,
+bool RTIW::HitBVH2(const BVH2Node* node,
                    const ray& ray,
                    interval interval,
                    hit_record& hitRecord)
@@ -852,6 +852,86 @@ bool RTIW::HitBVH2_VariableChild(const BVH2Node_VariableChild* node,
 
 
 	return false;
+}
+
+
+
+
+
+struct BottomUpActiveNode
+{
+	std::unique_ptr<BVH2Node> mNode;
+	std::size_t mChildPrimitivesCount = 1;
+};
+
+
+
+
+
+std::unique_ptr<BVH2Node> RTIW::BuildBVH2_BottomUp_Naive(
+	std::vector<const Primitive*>& primitivesList,
+	const std::size_t start,
+	const std::size_t end)
+{
+	const std::size_t primitiveCount = end - start;
+
+	RACC_REQUIRE(primitiveCount != 0, "Error: trying to create BVH tree with no primitives");
+
+	// Creating leaf nodes first
+	std::vector<BottomUpActiveNode> mergableNodes(primitiveCount);
+	for (std::size_t i = 0; i < primitiveCount; ++i)
+	{
+		mergableNodes[i].mNode = std::make_unique<BVH2Node>();
+		mergableNodes[i].mNode->Primitive = primitivesList[i + start];
+		mergableNodes[i].mNode->mBoundingBox = primitivesList[i + start]->GetBoundingBox();
+	}
+
+
+	while (mergableNodes.size() > 1)
+	{
+		double cheapestMergeCost = +infinity;
+		std::size_t idealLeftNode = 0;
+		std::size_t idealRightNode = 0;
+		AABB newNodeBB;
+
+		for (std::size_t leftNodeIdx = 0; leftNodeIdx < mergableNodes.size(); ++leftNodeIdx)
+		{
+			for (std::size_t rightNodeIdx = leftNodeIdx + 1; rightNodeIdx < mergableNodes.size(); ++rightNodeIdx)
+			{
+				AABB leftBB = mergableNodes[leftNodeIdx].mNode->mBoundingBox;
+				AABB rightBB = mergableNodes[rightNodeIdx].mNode->mBoundingBox;
+
+				const double leftPrimitiveCount = mergableNodes[leftNodeIdx].mChildPrimitivesCount;
+				const double rightPrimitiveCount = mergableNodes[rightNodeIdx].mChildPrimitivesCount;
+
+				AABB combinedBB = CombineAABB(leftBB, rightBB);
+				const double totalCost = combinedBB.SurfaceArea() * (leftPrimitiveCount + rightPrimitiveCount);
+
+				if (totalCost < cheapestMergeCost)
+				{
+					cheapestMergeCost = totalCost;
+					idealLeftNode = leftNodeIdx;
+					idealRightNode = rightNodeIdx;
+					newNodeBB = combinedBB;
+				}
+			}
+		}
+
+		BottomUpActiveNode newMergedActiveNode;
+		newMergedActiveNode.mNode = std::make_unique<BVH2Node>();
+		newMergedActiveNode.mNode->mLeftNode = std::move(mergableNodes[idealLeftNode].mNode);
+		newMergedActiveNode.mNode->mRightNode = std::move(mergableNodes[idealRightNode].mNode);
+		newMergedActiveNode.mNode->mBoundingBox = newNodeBB;
+		newMergedActiveNode.mChildPrimitivesCount = mergableNodes[idealLeftNode].mChildPrimitivesCount +
+		                                            mergableNodes[idealRightNode].mChildPrimitivesCount;
+
+		std::swap(mergableNodes[idealRightNode], mergableNodes.back());
+		mergableNodes.pop_back();
+
+		mergableNodes[idealLeftNode] = std::move(newMergedActiveNode);
+	}
+
+	return std::move(mergableNodes[0].mNode);
 }
 
 

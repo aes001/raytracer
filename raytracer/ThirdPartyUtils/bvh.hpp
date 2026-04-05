@@ -70,12 +70,12 @@ namespace RTIW
 
 
 
-	struct BVHBinaryNode
+	struct BVH2Node
 	{
 		AABB mBoundingBox;
 
-		std::unique_ptr<BVHBinaryNode> mLeftNode;
-		std::unique_ptr<BVHBinaryNode> mRightNode;
+		std::unique_ptr<BVH2Node> mLeftNode;
+		std::unique_ptr<BVH2Node> mRightNode;
 
 		const Primitive* Primitive = nullptr;
 
@@ -83,16 +83,16 @@ namespace RTIW
 	};
 
 
-	std::unique_ptr<BVHBinaryNode> BuildBVH2_MedianSplit(
+	std::unique_ptr<BVH2Node> BuildBVH2_MedianSplit(
 		std::vector<const Primitive*>& primitivesList,
 		const std::size_t start,
 		const std::size_t end);
 
 
-	bool HitBVH2(const BVHBinaryNode* node,
-	                       const ray& ray,
-	                       interval interval,
-	                       hit_record& hitRecord);
+	bool HitBVH2(const BVH2Node* node,
+	             const ray& ray,
+	             interval interval,
+	             hit_record& hitRecord);
 
 
 
@@ -167,10 +167,6 @@ namespace RTIW
 	};
 
 
-//	double ComputeSAHSplitCost(
-//		std::vector<const Primitive*>& primitivesList,
-//		const std::size_t start,
-//		const std::size_t end);
 
 
 
@@ -190,11 +186,10 @@ namespace RTIW
 
 
 
-	std::unique_ptr<BVH2Node_VariableChild> BuildBVH2_BottomUp_Naive(
+	std::unique_ptr<BVH2Node> BuildBVH2_BottomUp_Naive(
 		std::vector<const Primitive*>& primitivesList,
 		const std::size_t start,
-		const std::size_t end,
-		std::optional<AABB> preComputedBB
+		const std::size_t end
 		);
 
 

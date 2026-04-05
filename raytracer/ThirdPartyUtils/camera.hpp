@@ -81,7 +81,7 @@ namespace RTIW
 		void Initialize();
 
 		color RayColor(const ray& r, int maxDepth, const Scene& world) const;
-		color RayColor_BVH2(BVHBinaryNode* bvh,
+		color RayColor_BVH2(BVH2Node* bvh,
 		                    const ray& r,
 		                    int maxDepth,
 		                    const Scene& world) const;

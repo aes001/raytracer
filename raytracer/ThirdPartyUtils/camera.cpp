@@ -19,7 +19,8 @@
 	BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH || \
 	BVH4_TOP_DOWN_EVEN_SPLIT ||         \
 	BVH8_TOP_DOWN_EVEN_SPLIT ||         \
-	BVH2_TOP_DOWN_NAIVE_SAH
+	BVH2_TOP_DOWN_NAIVE_SAH  ||         \
+	BVH2_BOTTOM_UP_SAH
 
 
 
@@ -71,13 +72,15 @@ bool camera::Render(const Scene& world, RACCPPM::PPMImage& imageBuffer)
 #endif // USE_BVH
 
 #if BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH
-		std::unique_ptr<BVHBinaryNode> bvhTree = BuildBVH2_MedianSplit(allPrimitives, 0, allPrimitives.size());
+		std::unique_ptr<BVH2Node> bvhTree = BuildBVH2_MedianSplit(allPrimitives, 0, allPrimitives.size());
 #elif BVH4_TOP_DOWN_EVEN_SPLIT
 		std::unique_ptr<BVH4Node> bvhTree = BuildBVH4_EvenSplit(allPrimitives, 0, allPrimitives.size());
 #elif BVH8_TOP_DOWN_EVEN_SPLIT
 		std::unique_ptr<BVH8Node> bvhTree = BuildBVH8_EvenSplit(allPrimitives, 0, allPrimitives.size());
 #elif BVH2_TOP_DOWN_NAIVE_SAH
 		std::unique_ptr<BVH2Node_VariableChild> bvhTree = BuildBVH2_SAH_Naive(allPrimitives, 0, allPrimitives.size(), std::nullopt);
+#elif BVH2_BOTTOM_UP_SAH
+		std::unique_ptr<BVH2Node> bvhTree = BuildBVH2_BottomUp_Naive(allPrimitives, 0, allPrimitives.size());
 #endif // BVH BUILD STRATEGY
 
 
@@ -95,7 +98,7 @@ bool camera::Render(const Scene& world, RACCPPM::PPMImage& imageBuffer)
 				for (int sample = 0; sample < mSamplesPerPixel; sample++)
 				{
 					ray r = GetRay(i, j);
-#if BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH
+#if BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH || BVH2_BOTTOM_UP_SAH
 					pixelColor += RayColor_BVH2(bvhTree.get(), r, mMaxDepth, world);
 #elif BVH4_TOP_DOWN_EVEN_SPLIT
 					pixelColor += RayColor_BVH4(bvhTree.get(), r, mMaxDepth, world);
@@ -288,7 +291,7 @@ color camera::RayColor(const ray& r, int depth, const Scene& world) const
 
 
 
-color camera::RayColor_BVH2(BVHBinaryNode* bvh,
+color camera::RayColor_BVH2(BVH2Node* bvh,
                             const ray& r,
                             int depth,
                             const Scene& world) const
