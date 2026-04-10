@@ -25,16 +25,20 @@
 
 
 
+
 // ===========================================================================
 //		Includes
 // ---------------------------------------------------------------------------
+#include "benchmarkWrappedFunctions.hpp"
 #include "camera.hpp"
-#include "ppm.hpp"
 #include "hittable.hpp"
+#include "../instrumenter.hpp"
+#include "ppm.hpp"
 #include "RaccPPMToRTIWBridge.inl"
 #include "RaccDebug.hpp"
 
 // Standard Library
+#include <chrono>
 #include <optional>
 
 
@@ -71,26 +75,87 @@ bool camera::Render(const Scene& world, RACCPPM::PPMImage& imageBuffer)
 		world.GatherAllWorldPrimitives(allPrimitives);
 #endif // USE_BVH
 
-#if BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH
-		std::unique_ptr<BVH2Node> bvhTree = BuildBVH2_MedianSplit(allPrimitives, 0, allPrimitives.size());
-#elif BVH4_TOP_DOWN_EVEN_SPLIT
-		std::unique_ptr<BVH4Node> bvhTree = BuildBVH4_EvenSplit(allPrimitives, 0, allPrimitives.size());
-#elif BVH8_TOP_DOWN_EVEN_SPLIT
-		std::unique_ptr<BVH8Node> bvhTree = BuildBVH8_EvenSplit(allPrimitives, 0, allPrimitives.size());
-#elif BVH2_TOP_DOWN_NAIVE_SAH
-		std::unique_ptr<BVH2Node_VariableChild> bvhTree = BuildBVH2_SAH_Naive(allPrimitives, 0, allPrimitives.size(), std::nullopt);
-#elif BVH2_BOTTOM_UP_SAH
-		std::unique_ptr<BVH2Node> bvhTree = BuildBVH2_BottomUp_Naive(allPrimitives, 0, allPrimitives.size());
-#endif // BVH BUILD STRATEGY
 
+#if !BENCHMARK_BUILD
+	#if BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH
+		std::unique_ptr<BVH2Node> bvhTree = BuildBVH2_MedianSplit(allPrimitives, 0, allPrimitives.size());
+	#elif BVH4_TOP_DOWN_EVEN_SPLIT
+		std::unique_ptr<BVH4Node> bvhTree = BuildBVH4_EvenSplit(allPrimitives, 0, allPrimitives.size());
+	#elif BVH8_TOP_DOWN_EVEN_SPLIT
+		std::unique_ptr<BVH8Node> bvhTree = BuildBVH8_EvenSplit(allPrimitives, 0, allPrimitives.size());
+	#elif BVH2_TOP_DOWN_NAIVE_SAH
+		std::unique_ptr<BVH2Node_VariableChild> bvhTree = BuildBVH2_SAH_Naive(allPrimitives, 0, allPrimitives.size(), std::nullopt);
+	#elif BVH2_BOTTOM_UP_SAH
+		std::unique_ptr<BVH2Node> bvhTree = BuildBVH2_BottomUp_Naive(allPrimitives, 0, allPrimitives.size());
+	#endif // BVH BUILD STRATEGY
+
+#else // BENCHMARK_BUILD
+	auto* bmPtr = Benchmarker::Get();
+
+	#if BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH
+		std::unique_ptr<BVH2Node> bvhTree;
+	#elif BVH4_TOP_DOWN_EVEN_SPLIT
+		std::unique_ptr<BVH4Node> bvhTree;
+	#elif BVH8_TOP_DOWN_EVEN_SPLIT
+		std::unique_ptr<BVH8Node> bvhTree;
+	#elif BVH2_TOP_DOWN_NAIVE_SAH
+		std::unique_ptr<BVH2Node_VariableChild> bvhTree;
+	#elif BVH2_BOTTOM_UP_SAH
+		std::unique_ptr<BVH2Node> bvhTree;
+	#endif // BVH BUILD STRATEGY
+
+	#if USE_BVH
+		if (BenchmarkerState::kRenderTimingStats   == bmPtr->mState ||
+			BenchmarkerState::kRenderCountingStats == bmPtr->mState)
+		{
+		#if BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH
+			bvhTree = BuildBVH2_MedianSplit_BMWrapper(allPrimitives, 0, allPrimitives.size());
+		#elif BVH4_TOP_DOWN_EVEN_SPLIT
+			bvhTree = BuildBVH4_EvenSplit_BMWrapper(allPrimitives, 0, allPrimitives.size());
+		#elif BVH8_TOP_DOWN_EVEN_SPLIT
+			bvhTree = BuildBVH8_EvenSplit_BMWrapper(allPrimitives, 0, allPrimitives.size());
+		#elif BVH2_TOP_DOWN_NAIVE_SAH
+			bvhTree = BuildBVH2_SAH_Naive_BMWrapper(allPrimitives, 0, allPrimitives.size());
+		#elif BVH2_BOTTOM_UP_SAH
+			bvhTree = BuildBVH2_BottomUp_Naive_BMWrapper(allPrimitives, 0, allPrimitives.size());
+		#endif // BVH BUILD STRATEGY
+		}
+		else
+		{
+		#if BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH
+			bvhTree = BuildBVH2_MedianSplit(allPrimitives, 0, allPrimitives.size());
+		#elif BVH4_TOP_DOWN_EVEN_SPLIT
+			bvhTree = BuildBVH4_EvenSplit(allPrimitives, 0, allPrimitives.size());
+		#elif BVH8_TOP_DOWN_EVEN_SPLIT
+			bvhTree = BuildBVH8_EvenSplit(allPrimitives, 0, allPrimitives.size());
+		#elif BVH2_TOP_DOWN_NAIVE_SAH
+			bvhTree = BuildBVH2_SAH_Naive(allPrimitives, 0, allPrimitives.size(), std::nullopt);
+		#elif BVH2_BOTTOM_UP_SAH
+			bvhTree = BuildBVH2_BottomUp_Naive(allPrimitives, 0, allPrimitives.size());
+		#endif // BVH BUILD STRATEGY
+		}
+	#endif // USE_BVH
+#endif // BENCHMARK_BUILD
+
+
+#if BENCHMARK_BUILD
+		// Time the render
+		std::chrono::time_point<std::chrono::high_resolution_clock> renderStart;
+		if (BenchmarkerState::kRenderTimingStats == bmPtr->mState)
+		{
+			renderStart = std::chrono::high_resolution_clock::now();
+		}
+#endif // BENCHMARK_BUILD
 
 		// Render
 		for (int j = 0; j < mImageHeight; j++)
 		{
+#if !BENCHMARK_BUILD
 			std::clog << "\rScanlines remaining: " <<
 						 (mImageHeight - j)        <<
 						 ' '                       <<
 						 std::flush;
+#endif // !BENCHMARK_BUILD
 
 			for (int i = 0; i < mImageWidth; i++)
 			{
@@ -129,10 +194,22 @@ bool camera::Render(const Scene& world, RACCPPM::PPMImage& imageBuffer)
 				imageBuffer.PixelAt(i, j) = rgbVal;
 			}
 		}
+#if BENCHMARK_BUILD
+		if (BenchmarkerState::kRenderTimingStats == bmPtr->mState)
+		{
+			auto renderEnd = std::chrono::high_resolution_clock::now();
+
+			auto timeElapsed = std::chrono::duration_cast<BMT_RenderTime>(renderEnd - renderStart);
+
+			Benchmarker::Get()->mOverallTimingStats.back().mRenderTime = timeElapsed;
+		}
+#endif // BENCHMARK_BUILD
 
 		isRenderingSuccessful = true;
+#if !BENCHMARK_BUILD
 		std::clog << "\rRendering Done!";
 		std::clog << "\rDone.                          \n";
+#endif // !BENCHMARK_BUILD
 	}
 	else
 	{
@@ -284,6 +361,15 @@ color camera::RayColor(const ray& r, int depth, const Scene& world) const
 		colorRet = (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
 	}
 
+#if BENCHMARK_BUILD
+	if (BenchmarkerState::kRenderCountingStats == Benchmarker::Get()->mState)
+	{
+		auto* bmPtr = Benchmarker::Get();
+
+		++(bmPtr->mCountingStats.back().mNumberOfRaysShot);
+	}
+#endif // BENCHMARK_BUILD
+
 	return colorRet;
 }
 
@@ -305,9 +391,31 @@ color camera::RayColor_BVH2(BVH2Node* bvh,
 
 	color colorRet;
 
+	bool hit = false;
 	hit_record rec;
 
-	if (HitBVH2(bvh, r, interval(0.001, infinity), rec))
+#if !BENCHMARK_BUILD
+	hit = HitBVH2(bvh, r, interval(0.001, infinity), rec);
+#else // BENCHMARK_BUILD
+	if (BenchmarkerState::kRenderCountingStats == Benchmarker::Get()->mState)
+	{
+		BVHPerRayStats stats{};
+
+		hit = HitBVH2_BM(bvh, r, interval(0.001, infinity), rec, 0, stats);
+		auto& countingStats = Benchmarker::Get()->mCountingStats.back();
+
+		countingStats.mTraversalDepth.Add(stats.mTraversalDepth);
+		countingStats.mNumberOfNodesVisited.Add(stats.mNumberOfNodesVisited);
+		countingStats.mNumberOfAABBTest.Add(stats.mNumberOfAABBTests);
+		countingStats.mNumberOfPrimitiveTests.Add(stats.mNumberOfPrimitiveTests);
+	}
+	else
+	{
+		hit = HitBVH2(bvh, r, interval(0.001, infinity), rec);
+	}
+#endif // BENCHMARK_BUILD
+
+	if (hit)
 	{
 #if !RENDER_SURFACE_NORMAL
 		vec3 direction = rec.normal + random_on_hemisphere(rec.normal);
@@ -322,6 +430,15 @@ color camera::RayColor_BVH2(BVH2Node* bvh,
 		double a = 0.5 * (unitDirection.y() + 1.0);
 		colorRet = (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
 	}
+
+#if BENCHMARK_BUILD
+	if (BenchmarkerState::kRenderCountingStats == Benchmarker::Get()->mState)
+	{
+		auto* bmPtr = Benchmarker::Get();
+
+		++(bmPtr->mCountingStats.back().mNumberOfRaysShot);
+	}
+#endif // BENCHMARK_BUILD
 
 	return colorRet;
 
@@ -346,7 +463,31 @@ color camera::RayColor_BVH4(BVH4Node* bvh,
 	color colorRet;
 
 	hit_record rec;
-	if (HitBVH4(bvh, r, interval(0.001, infinity), rec))
+
+	bool hit = false;
+
+#if !BENCHMARK_BUILD
+	hit = HitBVH4(bvh, r, interval(0.001, infinity), rec);
+#else // BENCHMARK_BUILD
+	if (BenchmarkerState::kRenderCountingStats == Benchmarker::Get()->mState)
+	{
+		BVHPerRayStats stats{};
+
+		hit = HitBVH4_BM(bvh, r, interval(0.001, infinity), rec, 0, stats);
+		auto& countingStats = Benchmarker::Get()->mCountingStats.back();
+
+		countingStats.mTraversalDepth.Add(stats.mTraversalDepth);
+		countingStats.mNumberOfNodesVisited.Add(stats.mNumberOfNodesVisited);
+		countingStats.mNumberOfAABBTest.Add(stats.mNumberOfAABBTests);
+		countingStats.mNumberOfPrimitiveTests.Add(stats.mNumberOfPrimitiveTests);
+	}
+	else
+	{
+		hit = HitBVH4(bvh, r, interval(0.001, infinity), rec);
+	}
+#endif // BENCHMARK_BUILD
+
+	if (hit)
 	{
 #if !RENDER_SURFACE_NORMAL
 		vec3 direction = rec.normal + random_on_hemisphere(rec.normal);
@@ -361,6 +502,15 @@ color camera::RayColor_BVH4(BVH4Node* bvh,
 		double a = 0.5 * (unitDirection.y() + 1.0);
 		colorRet = (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
 	}
+
+#if BENCHMARK_BUILD
+	if (BenchmarkerState::kRenderCountingStats == Benchmarker::Get()->mState)
+	{
+		auto* bmPtr = Benchmarker::Get();
+
+		++(bmPtr->mCountingStats.back().mNumberOfRaysShot);
+	}
+#endif // BENCHMARK_BUILD
 
 	return colorRet;
 }
@@ -384,7 +534,32 @@ color camera::RayColor_BVH8(BVH8Node* bvh,
 	color colorRet;
 
 	hit_record rec;
-	if (HitBVH8(bvh, r, interval(0.001, infinity), rec))
+
+	bool hit = false;
+
+#if !BENCHMARK_BUILD
+	hit = HitBVH8(bvh, r, interval(0.001, infinity), rec);
+#else // BENCHMARK_BUILD
+	if (BenchmarkerState::kRenderCountingStats == Benchmarker::Get()->mState)
+	{
+		BVHPerRayStats stats{};
+
+		hit = HitBVH8_BM(bvh, r, interval(0.001, infinity), rec, 0, stats);
+		auto& countingStats = Benchmarker::Get()->mCountingStats.back();
+
+		countingStats.mTraversalDepth.Add(stats.mTraversalDepth);
+		countingStats.mNumberOfNodesVisited.Add(stats.mNumberOfNodesVisited);
+		countingStats.mNumberOfAABBTest.Add(stats.mNumberOfAABBTests);
+		countingStats.mNumberOfPrimitiveTests.Add(stats.mNumberOfPrimitiveTests);
+	}
+	else
+	{
+		hit = HitBVH8(bvh, r, interval(0.001, infinity), rec);
+	}
+
+#endif // BENCHMARK_BUILD
+
+	if (hit)
 	{
 #if !RENDER_SURFACE_NORMAL
 		vec3 direction = rec.normal + random_on_hemisphere(rec.normal);
@@ -399,6 +574,15 @@ color camera::RayColor_BVH8(BVH8Node* bvh,
 		double a = 0.5 * (unitDirection.y() + 1.0);
 		colorRet = (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
 	}
+
+#if BENCHMARK_BUILD
+	if (BenchmarkerState::kRenderCountingStats == Benchmarker::Get()->mState)
+	{
+		auto* bmPtr = Benchmarker::Get();
+
+		++(bmPtr->mCountingStats.back().mNumberOfRaysShot);
+	}
+#endif // BENCHMARK_BUILD
 
 	return colorRet;
 }
@@ -422,7 +606,31 @@ color camera::RayColor_BVH2_VariableChildNode(BVH2Node_VariableChild* bvh,
 	color colorRet;
 
 	hit_record rec;
-	if (HitBVH2_VariableChild(bvh, r, interval(0.001, infinity), rec))
+
+	bool hit = false;
+
+#if !BENCHMARK_BUILD
+	hit = HitBVH2_VariableChild(bvh, r, interval(0.001, infinity), rec);
+#else // BENCHMARK_BUILD
+	if (BenchmarkerState::kRenderCountingStats == Benchmarker::Get()->mState)
+	{
+		BVHPerRayStats stats{};
+
+		hit = HitBVH2_VariableChild_BM(bvh, r, interval(0.001, infinity), rec, 0, stats);
+		auto& countingStats = Benchmarker::Get()->mCountingStats.back();
+
+		countingStats.mTraversalDepth.Add(stats.mTraversalDepth);
+		countingStats.mNumberOfNodesVisited.Add(stats.mNumberOfNodesVisited);
+		countingStats.mNumberOfAABBTest.Add(stats.mNumberOfAABBTests);
+		countingStats.mNumberOfPrimitiveTests.Add(stats.mNumberOfPrimitiveTests);
+	}
+	else
+	{
+		hit = HitBVH2_VariableChild(bvh, r, interval(0.001, infinity), rec);
+	}
+#endif // BENCHMARK_BUILD
+
+	if (hit)
 	{
 #if !RENDER_SURFACE_NORMAL
 		vec3 direction = rec.normal + random_on_hemisphere(rec.normal);
@@ -437,6 +645,15 @@ color camera::RayColor_BVH2_VariableChildNode(BVH2Node_VariableChild* bvh,
 		double a = 0.5 * (unitDirection.y() + 1.0);
 		colorRet = (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
 	}
+
+#if BENCHMARK_BUILD
+	if (BenchmarkerState::kRenderCountingStats == Benchmarker::Get()->mState)
+	{
+		auto* bmPtr = Benchmarker::Get();
+
+		++(bmPtr->mCountingStats.back().mNumberOfRaysShot);
+	}
+#endif // BENCHMARK_BUILD
 
 	return colorRet;
 

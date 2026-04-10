@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <cstdlib>
 
 
 
@@ -52,6 +53,18 @@
 
 
 
+#if defined(__clang__) || defined(__GNUC__)
+	#define RACC_CRASH_ALWAYS() __builtin_trap()
+
+#else
+	#define RACC_CRASH_ALWAYS() std::abort()
+
+#endif // RACC_CRASH
+
+
+
+
+
 #ifndef NDEBUG
 	#define RACC_REQUIRE(_boolExpression, _messageStream) \
 	do { \
@@ -75,6 +88,22 @@
 
 
 
+
+#define RACC_RUNTIME_REQUIRE(_boolExpression, _messageStream) \
+do { \
+	if(!(_boolExpression)) \
+	{ \
+		std::ostringstream assertStream; \
+		assertStream << _messageStream; \
+		std::cerr << "Assertion failed!\n" \
+				  << "File: " << __FILE__ << "\n" \
+				  << "Line: " << __LINE__ << "\n" \
+				  << "Expression: " << #_boolExpression << "\n" \
+				  << assertStream.str() << "\n" \
+				  << std::endl; \
+		RACC_CRASH_ALWAYS(); \
+	} \
+} while (0)
 
 #endif // RACC_DEBUG_HPP
 

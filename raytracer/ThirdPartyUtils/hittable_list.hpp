@@ -53,6 +53,8 @@ namespace RTIW
 		virtual void GatherPrimitives(
 				std::vector<const Primitive*>& out) const = 0;
 
+		std::size_t CountPrimitives() const { return mPrimitives.size(); }
+
 	protected:
 		std::vector<std::shared_ptr<Primitive>> mPrimitives;
 	};
@@ -79,6 +81,8 @@ namespace RTIW
 		std::shared_ptr<SceneObject> Get(std::size_t index) { return mObjects[index]; }
 
 		void GatherAllWorldPrimitives(std::vector<const Primitive*>& out) const;
+
+		std::size_t CountPrimitives() const;
 
 	private:
 		std::vector<std::shared_ptr<SceneObject>> mObjects;

@@ -1,7 +1,9 @@
 /* NAME:
- *		bvh.h
+ *		bvh.hpp
  *
  * DESCRIPTION:
+ *		Header for bvh.cpp
+ *		An implementation of multiple BVH algorithms for the render.
  *
  * CONTRIBUTORS:
  *		Racc 28-MAR-26

@@ -96,3 +96,19 @@ void Scene::GatherAllWorldPrimitives(std::vector<const Primitive*>& out) const
 
 
 
+std::size_t Scene::CountPrimitives() const
+{
+	int total = 0;
+
+	for (const auto& object : mObjects)
+	{
+		total += object->CountPrimitives();
+	}
+
+	return total;
+}
+
+
+
+
+

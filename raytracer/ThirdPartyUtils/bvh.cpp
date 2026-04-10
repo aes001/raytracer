@@ -17,8 +17,9 @@
 // ---------------------------------------------------------------------------
 #include "bvh.hpp"
 #include "../convenientNumerics.hpp"
-#include "RaccDebug.hpp"
 #include "hittable.hpp"
+#include "../instrumenter.hpp"
+#include "RaccDebug.hpp"
 
 // Standard Library
 #include <algorithm>
@@ -259,15 +260,15 @@ bool RTIW::HitBVH2(const BVH2Node* node,
 	}
 
 
-	if (!HitAABB(node->mBoundingBox, ray, interval)) // Will resize the interval to the BB enter and exit
-	{
-		return false;
-	}
-
-
 	if (node->IsLeaf())
 	{
 		return node->Primitive->hit(ray, interval, hitRecord);
+	}
+
+
+	if (!HitAABB(node->mBoundingBox, ray, interval)) // Will resize the interval to the BB enter and exit
+	{
+		return false;
 	}
 
 
