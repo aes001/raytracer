@@ -1,0 +1,19 @@
+#ifndef DEFINE_HPP
+#define DEFINE_HPP
+
+
+
+
+
+#define USE_BVH \
+	BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH || \
+	BVH4_TOP_DOWN_EVEN_SPLIT ||         \
+	BVH8_TOP_DOWN_EVEN_SPLIT ||         \
+	BVH2_TOP_DOWN_NAIVE_SAH  ||         \
+	BVH2_BOTTOM_UP_SAH
+
+
+
+
+
+#endif // DEFINE_HPP

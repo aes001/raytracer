@@ -22,10 +22,9 @@
 // ===========================================================================
 //		Includes
 // ---------------------------------------------------------------------------
-#include <cmath>
-#include <cassert>
-#include <cstdlib>
 #include <array>
+#include <cassert>
+#include <type_traits>
 
 
 
@@ -39,15 +38,18 @@ struct Mat
 	constexpr
 	T& At(std::size_t row, std::size_t col) noexcept
 	{
-		assert( row < 4 && col < 4 );
-		return v[row*4 + col];
+		assert(row < Row && col < Col);
+		return v[row*Col + col];
 	}
 	constexpr
 	const T& At(std::size_t row, std::size_t col) const noexcept
 	{
-		assert( row < 4 && col < 4 );
-		return v[row*4 + col];
+		assert( row < Row && col < Col);
+		return v[row*Col + col];
 	}
+
+	static constexpr std::size_t kRows = Row;
+	static constexpr std::size_t kCols = Col;
 };
 
 
@@ -71,6 +73,40 @@ constexpr Mat<T, R, C> operator*(const Mat<T, R, K>& a, const Mat<T, K, C>& b)
 	}
 
 	return out;
+}
+
+
+
+
+
+template <typename T, std::size_t R, std::size_t C, typename S,
+          typename = std::enable_if_t<std::is_arithmetic_v<S>>>
+constexpr auto operator*(const Mat<T, R, C>& a, const S& scalar)
+{
+	using OutT = std::common_type_t<T, S>;
+
+	Mat<OutT, R, C> out{};
+
+	for (std::size_t r = 0; r < R; ++r)
+	{
+		for (std::size_t c = 0; c < C; ++c)
+		{
+			out.At(r, c) = a.At(r,c) * scalar;
+		}
+	}
+
+	return out;
+}
+
+
+
+
+
+template <typename T, std::size_t R, std::size_t C, typename S,
+          typename = std::enable_if_t<std::is_arithmetic_v<S>>>
+constexpr auto operator*(const S& scalar, const Mat<T, R, C>& a)
+{
+	return a * scalar;
 }
 
 

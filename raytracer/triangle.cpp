@@ -54,7 +54,7 @@ bool Triangle::hit(const ray& r, interval ray_t, hit_record& rec) const
 
 	// Use the determinant to check if the triangle is facing away from the
 	// camera
-	const bool backfacing = determinant < 0.0;
+	const bool backfacing = determinant < 0.0000001;
 
 	if (backfacing)
 	{

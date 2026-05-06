@@ -15,22 +15,12 @@
 
 
 
-#define USE_BVH \
-	BINARY_TOP_DOWN_MEDIAN_SPLIT_BVH || \
-	BVH4_TOP_DOWN_EVEN_SPLIT ||         \
-	BVH8_TOP_DOWN_EVEN_SPLIT ||         \
-	BVH2_TOP_DOWN_NAIVE_SAH  ||         \
-	BVH2_BOTTOM_UP_SAH
-
-
-
-
-
 // ===========================================================================
 //		Includes
 // ---------------------------------------------------------------------------
 #include "benchmarkWrappedFunctions.hpp"
 #include "camera.hpp"
+#include "../define.hpp"
 #include "hittable.hpp"
 #include "../instrumenter.hpp"
 #include "ppm.hpp"
@@ -73,6 +63,12 @@ bool camera::Render(const Scene& world, RACCPPM::PPMImage& imageBuffer)
 #if USE_BVH
 		std::vector<const Primitive*> allPrimitives;
 		world.GatherAllWorldPrimitives(allPrimitives);
+
+#if BENCHMARK_BUILD
+		BuildMetaData::RunTimeBuildInfo::Get()->mPrimitiveCount = allPrimitives.size();
+#endif //BENCHMARK_BUILD
+
+
 #endif // USE_BVH
 
 
@@ -345,7 +341,7 @@ color camera::RayColor(const ray& r, int depth, const Scene& world) const
 	color colorRet;
 
 	hit_record rec;
-	if (world.hit(r, interval(0.001, infinity), rec))
+	if (world.hit(r, interval(0.00001, infinity), rec))
 	{
 #if !RENDER_SURFACE_NORMAL
 		vec3 direction = rec.normal + random_on_hemisphere(rec.normal);
@@ -395,7 +391,7 @@ color camera::RayColor_BVH2(BVH2Node* bvh,
 	hit_record rec;
 
 #if !BENCHMARK_BUILD
-	hit = HitBVH2(bvh, r, interval(0.001, infinity), rec);
+	hit = HitBVH2(bvh, r, interval(0.00001, infinity), rec);
 #else // BENCHMARK_BUILD
 	if (BenchmarkerState::kRenderCountingStats == Benchmarker::Get()->mState)
 	{
@@ -467,7 +463,7 @@ color camera::RayColor_BVH4(BVH4Node* bvh,
 	bool hit = false;
 
 #if !BENCHMARK_BUILD
-	hit = HitBVH4(bvh, r, interval(0.001, infinity), rec);
+	hit = HitBVH4(bvh, r, interval(0.00001, infinity), rec);
 #else // BENCHMARK_BUILD
 	if (BenchmarkerState::kRenderCountingStats == Benchmarker::Get()->mState)
 	{
@@ -538,7 +534,7 @@ color camera::RayColor_BVH8(BVH8Node* bvh,
 	bool hit = false;
 
 #if !BENCHMARK_BUILD
-	hit = HitBVH8(bvh, r, interval(0.001, infinity), rec);
+	hit = HitBVH8(bvh, r, interval(0.00001, infinity), rec);
 #else // BENCHMARK_BUILD
 	if (BenchmarkerState::kRenderCountingStats == Benchmarker::Get()->mState)
 	{
@@ -610,7 +606,7 @@ color camera::RayColor_BVH2_VariableChildNode(BVH2Node_VariableChild* bvh,
 	bool hit = false;
 
 #if !BENCHMARK_BUILD
-	hit = HitBVH2_VariableChild(bvh, r, interval(0.001, infinity), rec);
+	hit = HitBVH2_VariableChild(bvh, r, interval(0.00001, infinity), rec);
 #else // BENCHMARK_BUILD
 	if (BenchmarkerState::kRenderCountingStats == Benchmarker::Get()->mState)
 	{

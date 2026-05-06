@@ -62,7 +62,8 @@ std::unique_ptr<BVH2Node> RTIW::BuildBVH2_MedianSplit_BMWrapper(
 		statsContainer.mLeafSizes.Add(1);
 
 		statsContainer.mMemoryUsage =
-			sizeof(BVH2Node) * (statsContainer.mTotalNumberOfNodes);
+			(sizeof(BVH2Node) * statsContainer.mTotalNumberOfNodes) +
+			(sizeof(const Primitive*) * BuildMetaData::RunTimeBuildInfo::Get()->mPrimitiveCount);
 
 		return res;
 	}
@@ -108,7 +109,8 @@ std::unique_ptr<BVH4Node> RTIW::BuildBVH4_EvenSplit_BMWrapper(
 			CountBVHLeafNodesAndCollectLeafSizes(res.get());
 
 		statsContainer.mMemoryUsage =
-			sizeof(BVH4Node) * (statsContainer.mTotalNumberOfNodes);
+			(sizeof(BVH4Node) * statsContainer.mTotalNumberOfNodes) +
+			(sizeof(const Primitive*) * BuildMetaData::RunTimeBuildInfo::Get()->mPrimitiveCount);
 
 		return res;
 	}
@@ -153,7 +155,8 @@ std::unique_ptr<BVH8Node> RTIW::BuildBVH8_EvenSplit_BMWrapper(
 			CountBVHLeafNodesAndCollectLeafSizes(res.get());
 
 		statsContainer.mMemoryUsage =
-			sizeof(BVH8Node) * (statsContainer.mTotalNumberOfNodes);
+			(sizeof(BVH8Node) * statsContainer.mTotalNumberOfNodes) +
+			(sizeof(const Primitive*) * BuildMetaData::RunTimeBuildInfo::Get()->mPrimitiveCount);
 
 		return res;
 	}
@@ -198,7 +201,8 @@ std::unique_ptr<BVH2Node> RTIW::BuildBVH2_BottomUp_Naive_BMWrapper(
 		statsContainer.mLeafSizes.Add(1);
 
 		statsContainer.mMemoryUsage =
-			sizeof(BVH2Node) * (statsContainer.mTotalNumberOfNodes);
+			(sizeof(BVH2Node) * statsContainer.mTotalNumberOfNodes) +
+			(sizeof(const Primitive*) * BuildMetaData::RunTimeBuildInfo::Get()->mPrimitiveCount);
 
 		return res;
 	}
@@ -249,8 +253,9 @@ std::unique_ptr<BVH2Node_VariableChild> RTIW::BuildBVH2_SAH_Naive_BMWrapper(
 			CountBVHLeafNodesAndCollectLeafSizes(res.get());
 
 		statsContainer.mMemoryUsage =
-			sizeof(BVH2Node_VariableChild)
-			* (statsContainer.mTotalNumberOfNodes);
+			(sizeof(BVH2Node_VariableChild)
+			* statsContainer.mTotalNumberOfNodes)
+			+ (sizeof(const Primitive*) * BuildMetaData::RunTimeBuildInfo::Get()->mPrimitiveCount);
 
 		return res;
 	}
@@ -457,6 +462,7 @@ std::size_t RTIW::CountBVHLeafNodesAndCollectLeafSizes(const BVH4Node* tree)
 
 	if (tree->IsLeaf())
 	{
+		// What the heck was I thinking?
 		auto& leafSizes = Benchmarker::Get()->mCountingStats.back().mLeafSizes;
 		leafSizes.Add(tree->mPrimitiveCount);
 		return 1;

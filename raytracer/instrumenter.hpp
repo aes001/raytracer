@@ -348,7 +348,17 @@ namespace BuildMetaData
 #endif // BVH BUILD STRATEGY
 
 
-	static std::string sSceneName = "Suzanne";
+
+	// Why did I make this... Eh it works...
+	struct RunTimeBuildInfo
+	{
+		static RunTimeBuildInfo* Get() { static RunTimeBuildInfo bi; return &bi;};
+
+		std::string mSceneName = "Suzanne";
+		std::int64_t mPrimitiveCount = 0;
+	};
+
+
 
 
 	struct MetaData

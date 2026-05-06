@@ -15,10 +15,13 @@
 // ===========================================================================
 //		Includes
 // ---------------------------------------------------------------------------
+#include "define.hpp"
 #include "instrumenter.hpp"
 
 // Standard Library
 #include <fstream>
+#include <filesystem>
+
 
 
 
@@ -68,13 +71,22 @@ void Benchmarker::WriteData() const
 {
 	bool isSaved = false;
 
-	std::string fileNameBase = BuildMetaData::sSceneName + "_"
+	std::string cleanedUpSceneName = std::filesystem::path(BuildMetaData::RunTimeBuildInfo::Get()->mSceneName).stem();
+
+	if (cleanedUpSceneName.empty())
+	{
+		cleanedUpSceneName = "Unknown";
+	}
+
+	std::string fileNameBase = cleanedUpSceneName + "_"
 	                         + BuildMetaData::kMetaDataAbrvd.TreeType + "_"
 	                         + BuildMetaData::kMetaDataAbrvd.Approach + "_"
 	                         + BuildMetaData::kMetaDataAbrvd.SplitStrategy;
 
 	auto& renderSettingsData = Benchmarker::Get()->mRenderSettings;
 
+
+#if USE_BVH
 	// Write the render timings
 	std::ofstream timingsFile;
 	timingsFile.open("Timings-" + fileNameBase + ".csv", std::ios::out | std::ios::binary);
@@ -229,6 +241,36 @@ void Benchmarker::WriteData() const
 		auto& numberOfPrimitiveTestsData = countingsData.mNumberOfPrimitiveTests;
 		writer(numberOfPrimitiveTestsData, "NumberOfPrimitiveTests");
 	}
+#else // !USE_BVH
+
+		// Write the render timings
+		std::ofstream timingsFile;
+		timingsFile.open("Timings-" + fileNameBase + ".csv", std::ios::out | std::ios::binary);
+
+		if (timingsFile.is_open())
+		{
+
+			timingsFile << "TreeType" << ","
+			            << "Approach" << ","
+			            << "SplitStrategy" << ","
+			            << "RenderTime" << ","
+			            << "RenderTimeUnit" << ","
+			            << "SampleCount" << "\n";
+
+			auto& timingsData = Benchmarker::Get()->mOverallTimingStats;
+			for (std::size_t i = 0; i < timingsData.size(); ++i)
+			{
+				timingsFile << BuildMetaData::kMetaData.TreeType << ","
+				            << BuildMetaData::kMetaData.Approach << ","
+				            << BuildMetaData::kMetaData.SplitStrategy << ","
+				            << timingsData[i].mRenderTime.count() << ","
+				            << "miliseconds" << ","
+				            << renderSettingsData[i].mSampleCount << "\n";
+			}
+		}
+
+#endif // !USE_BVH
+
 }
 
 

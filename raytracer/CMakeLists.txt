@@ -90,6 +90,7 @@ set (THIRD_PARTY_UTILS_SRC
 
 set (MY_OWN_STUFF_SRC
 	"convenientNumerics.hpp"
+	"define.hpp"
 	"instrumenter.cpp"
 	"instrumenter.hpp"
 	"MatAndVec/matrices.hpp"
@@ -189,6 +190,11 @@ endfunction()
 function(TARGET_LINK_FILES_COMPLETE projectName)
 	TARGET_LINK_FILES(${projectName})
 	TARGET_LINK_FILES(BM_${projectName})
+
+	target_compile_definitions(BM_${projectName}
+		PRIVATE
+			BENCHMARK_BUILD=1
+	)
 endfunction()
 
 
@@ -201,7 +207,6 @@ function(TARGET_SELECT_BVH_ALGORITHM targetName selectedBVHAlgorithm)
 	target_compile_definitions(BM_${targetName}
 		PRIVATE
 			${selectedBVHAlgorithm}=1
-			BENCHMARK_BUILD=1
 	)
 endfunction()
 

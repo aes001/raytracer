@@ -1,4 +1,5 @@
 #include "camera.hpp"
+#include "define.hpp"
 #include "fmt/base.h"
 #include "hittable.hpp"
 #include "hittable_list.hpp"
@@ -22,19 +23,39 @@ int main(int argc, char *argv[])
     // World
 	RTIW::Scene world;
 
-	if (argc > 2)
+#if !BENCHMARK_BUILD
+	if (argc > 3)
 	{
 		std::cerr << "Invalid argument count";
 		return -1;
 	}
 
+	int sampleCount = 10;
+#else // BENCHMARK_BUILD
+	if (argc > 2)
+	{
+		std::cerr << "Invalid argument count";
+		return -1;
+	}
+#endif // BENCHMARK_BUILD
+
 
 	if (argc == 2)
 	{
-		BuildMetaData::sSceneName = std::string(argv[1]);
+		BuildMetaData::RunTimeBuildInfo::Get()->mSceneName = std::string(argv[1]);
 		auto object = std::make_shared<RTIW::TriangulatedMesh>(argv[1]);
 		world.add(object);
 	}
+#if !BENCHMARK_BUILD
+	else if (argc == 3)
+	{
+		BuildMetaData::RunTimeBuildInfo::Get()->mSceneName = std::string(argv[1]);
+		auto object = std::make_shared<RTIW::TriangulatedMesh>(argv[1]);
+		world.add(object);
+
+		sampleCount = std::stoi(argv[2]);
+	}
+#endif // !BENCHMARK_BUILD
 	else
 	{
 		std::size_t monkeyIdx = world.add(std::make_shared<RTIW::TriangulatedMesh>("../../data/suzanne.obj"));
@@ -48,8 +69,7 @@ int main(int argc, char *argv[])
 
 #if !BENCHMARK_BUILD
 	const double aspectRatio = 16.0 / 9.0;
-	const int imageWidth = 640;
-	const int sampleCount = 10;
+	const int imageWidth = 1920;
 
 	RTIW::camera cam;
 	cam.SetAspectRatio(aspectRatio);
@@ -86,7 +106,7 @@ int main(int argc, char *argv[])
 
 
 	// Warm Up the renderer
-	const std::size_t warmUpCount = 5;
+	const std::size_t warmUpCount = 2;
 	bmPtr->SetState(BenchmarkerState::kWarmingUp);
 	for (std::size_t i = 0; i < warmUpCount; ++i)
 	{
@@ -104,7 +124,7 @@ int main(int argc, char *argv[])
 
 	// Do timing Stats
 	bmPtr->SetState(BenchmarkerState::kRenderTimingStats);
-	const std::size_t renderTimingTrialsCount = 20;
+	const std::size_t renderTimingTrialsCount = 10;
 	for (std::size_t i = 0; i < renderTimingTrialsCount; ++i)
 	{
 		std::clog << "\rBenchmarking render timings, " <<
@@ -164,9 +184,9 @@ int main(int argc, char *argv[])
 	std::clog << "\n";
 
 
-
+#if USE_BVH
 	// Do counting Stats
-	renderSettings.mSampleCount = 10;
+	renderSettings.mSampleCount = 1;
 	cam.SetSampleCount(renderSettings.mSampleCount);
 
 	bmPtr->SetState(BenchmarkerState::kRenderCountingStats);
@@ -188,7 +208,7 @@ int main(int argc, char *argv[])
 	fmt::print("Average Number of nodes visited   = {}\n", countingStats.mNumberOfNodesVisited.Average());
 	fmt::print("Average Number of AABB test       = {}\n", countingStats.mNumberOfAABBTest.Average());
 	fmt::print("Average Number of primitive tests = {}\n", countingStats.mNumberOfPrimitiveTests.Average());
-
+#endif // USE_BVH
 
 
 	// Write the data
